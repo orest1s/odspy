@@ -135,7 +135,7 @@ while True:
 			print('Bucket id =', k)
 			blst = [(unpad(cr.D(oram.nod[k].value[i][0], passHash).decode('utf-8')), unpad(cr.D(oram.nod[k].value[i][1], passHash).decode('utf-8'))) for i in range(Z)]
 			print(blst)
-		input('\nPlease press any key to continue...')
+		input('\nPlease press [ENTER] to continue...')
 
 	elif com == '4':
 		print()
@@ -143,4 +143,4 @@ while True:
 			print('Bucket id =', k)
 			blst = [(oram.nod[k].value[i][0].hex(), oram.nod[k].value[i][1].hex()) for i in range(Z)]
 			print(blst)
-		input('\nPlease press any key to continue...')
+		input('\nPlease press [ENTER] to continue...')
