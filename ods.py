@@ -6,18 +6,6 @@ import bintree as bt
 import crypt as cr
 
 
-
-os.system('clear')						# Clear screen
-print('CREATE AN ODS (Oblivious Data Structure)')
-print('----------------------------------------')
-print('[1] --> Oblivious Stack')
-print('[2] --> Oblivious Queue')
-print('[3] --> Oblivious Heap')
-print('[4] --> Oblivious AVL Tree')
-print('[ENTER] --> EXIT\n\n')
-
-N = int(input('Number of data blocks (N) = '))	# Get the number of blocks the ODS will contain
-L = int(math.log(N, 2)/2)						# Calculate the height of the PATH-ORAM tree that will be used
 password = 'myP@th0rAM'							# Define the local password
 passHash = cr.H(password)						# Hash the local password in order to use it as a key for AES
 Z = 4											# Define the number of blocks in a bucket
@@ -25,24 +13,26 @@ S = []											# Initialize local stash as a list
 position = {}									# Initialize position map as a dictionary
 blocks = []										# Initialize the list holding the data blocks
 
-
 BS = 16																#
 pad = lambda s: s + (BS - len(s) % BS) * chr(BS - len(s) % BS)		# pad and unpad methods used to match AES block size
 unpad = lambda s : s[:-ord(s[len(s)-1:])]							##
 
-oram = bt.binTree(L, Z, passHash)				# Construct an instance of the binTree class with the given parametres
 
+def dataIn(Ν):
+	#N = int(input('Number of data blocks (N) = '))	# Get the number of blocks the ODS will contain
+	L = math.ceil(math.log(N, 2))				# Calculate the height of the PATH-ORAM tree that will be used
 
-print('\nEnter the data of each block to be outsourced')
-print('----------------------------------------------')
-for i in range(2**L):
-	blockName = input('Name of Block No. {}: '.format(i))
-	blockData = input('Data of Block No. {}: '.format(i))
-	print()
-	blocks.append((blockName, blockData))		# Construct a list holding the blocks of data
-	pos = random.randint(0, 2**L - 1)
-	position[blockName] = pos 					# Assign random integer between 0 and (2^L - 1) to the current block
+	oram = bt.binTree(L, Z, passHash)			# Construct an instance of the binTree class with the given parametres
 
+	print('\n\nInitial data entry')
+	print('------------------')
+	for i in range(N):
+		blockName = input('Name of {} No. {}: '.format(blockAlias, i))
+		blockData = input('Data of {} No. {}: '.format(blockAlias, i))
+		print()
+		blocks.append((blockName, blockData))		# Construct a list holding the blocks of data
+		pos = random.randint(0, 2**L - 1)
+		position[blockName] = pos 					# Assign random integer between 0 and (2^L - 1) to the current block
 
 
 def Access(op, block_name, dataN = None):
@@ -94,6 +84,62 @@ def Access(op, block_name, dataN = None):
 # Write the given data blocks in the ORAM	
 for j in blocks:
 	Access('write', j[0], j[1])
+
+
+
+while True:							# Main program loop
+
+	os.system('clear')					# Clear screen
+	print('CREATE AN ODS (Oblivious Data Structure)')
+	print('----------------------------------------')
+	print('\n[1] --> Oblivious Stack')
+	print('\n[2] --> Oblivious Queue')
+	print('\n[3] --> Oblivious Heap')
+	print('\n[4] --> Oblivious AVL Tree')
+	print('\n[ENTER] --> EXIT\n\n')
+
+	obstruct = input('Please enter your selection : ')
+
+	if obstruct == '1':
+		os.system('clear')
+		blockAlias = 'item'
+		print('OBLIVIOUS STACK')
+		print('---------------')
+		N = int(input('\nPlease enter the number of items = '))				# Get the number of items the stack will contain
+		dataIn(N)
+		# present stack menu
+		break
+	elif obstruct == '2':
+		os.system('clear')
+		blockAlias = 'item'
+		print('OBLIVIOUS QUEUE')
+		print('---------------')
+		N = int(input('\nNumber of items = '))				# Get the number of items the stack will contain
+		dataIn(N)
+		# present queque menu
+		break
+	elif obstruct == '3':
+		os.system('clear')
+		blockAlias = 'node'
+		print('OBLIVIOUS HEAP')
+		print('--------------')
+		N = int(input('\nNumber of nodes = '))				# Get the number of items the stack will contain
+		dataIn(N)
+		# present heap menu
+		break
+	elif obstruct == '4':
+		os.system('clear')
+		blockAlias = 'node'
+		print('OBLIVIOUS AVL TREE')
+		print('------------------')
+		N = int(input('\nNumber of nodes = '))	# Get the number of items the stack will contain
+		dataIn(N)
+		# present AVL menu
+		break
+	elif obstruct == '':
+		break
+
+
 
 
 
