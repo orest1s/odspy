@@ -12,30 +12,14 @@ Z = 4											# Define the number of blocks in a bucket
 S = []											# Initialize local stash as a list
 position = {}									# Initialize position map as a dictionary
 blocks = []										# Initialize the list holding the data blocks
+cache = []										# Initialize local (client) cache
 
 BS = 16																#
 pad = lambda s: s + (BS - len(s) % BS) * chr(BS - len(s) % BS)		# pad and unpad methods used to match AES block size
 unpad = lambda s : s[:-ord(s[len(s)-1:])]							##
 
 
-def dataIn(Ν):
-	#N = int(input('Number of data blocks (N) = '))	# Get the number of blocks the ODS will contain
-	L = math.ceil(math.log(N, 2))				# Calculate the height of the PATH-ORAM tree that will be used
-
-	oram = bt.binTree(L, Z, passHash)			# Construct an instance of the binTree class with the given parametres
-
-	print('\n\nInitial data entry')
-	print('------------------')
-	for i in range(N):
-		blockName = input('Name of {} No. {}: '.format(blockAlias, i))
-		blockData = input('Data of {} No. {}: '.format(blockAlias, i))
-		print()
-		blocks.append((blockName, blockData))		# Construct a list holding the blocks of data
-		pos = random.randint(0, 2**L - 1)
-		position[blockName] = pos 					# Assign random integer between 0 and (2^L - 1) to the current block
-
-
-def Access(op, block_name, dataN = None):
+def oramAccess(op, block_name, dataN = None):
 	
 	def writeBucket(bucketID, block_list):
 		while len(block_list) < Z:											# Pad the bucket with dummy blocks until its size is Z
@@ -43,10 +27,9 @@ def Access(op, block_name, dataN = None):
 		
 		# Encrypt the bucket blocks to be written in the ORAM
 		enBucket = [(cr.E(bytes(pad(bl[0]).encode('utf-8')), passHash), cr.E(bytes(pad(bl[1]).encode('utf-8')), passHash)) for bl in block_list]
+		# Write the encrypted bucket in the ORAM
+		oram.nod[bucketID].value = enBucket									
 
-		oram.nod[bucketID].value = enBucket									# Write the encrypted bucket in the ORAM
-
-	
 	global S
 	oramPath = []
 	x = position[block_name]
@@ -54,7 +37,6 @@ def Access(op, block_name, dataN = None):
 	position[block_name] = pos 					# Assign new random integer between 0 and (2^L - 1) to the current block
 
 	oramPath = oram.P(oram.nod[L, x])			# Get the path of leaf x and store it locally in a list of buckets
-
 	
 	# Add to the local stash S the decrypted blocks of the oramPath list
 	for l in range(L+1):
@@ -80,16 +62,27 @@ def Access(op, block_name, dataN = None):
 
 	return block[1]
 
+def dataIn(Ν):
+	print('\n\nInitial data entry')
+	print('------------------')
+	for i in range(N):
+		blockLabel = input('Label of {} No. {}: '.format(blockAlias, i))
+		blockData = input('Data of {} No. {}: '.format(blockAlias, i))
+		print()
+		blocks.append((blockLabel, blockData))		# Construct a list holding the data blocks
+		pos = random.randint(0, 2**L - 1)
+		position[blockLabel] = pos 					# Assign random integer between 0 and (2^L - 1) to the current block
+	
+	# Write given data blocks in ORAM	
+	for j in blocks:
+		oramAccess('write', j[0], j[1])
 
-# Write the given data blocks in the ORAM	
-for j in blocks:
-	Access('write', j[0], j[1])
 
 
 
-while True:							# Main program loop
+while True:														# Main program loop
 
-	os.system('clear')					# Clear screen
+	os.system('clear')											# Clear screen
 	print('CREATE AN ODS (Oblivious Data Structure)')
 	print('----------------------------------------')
 	print('\n[1] --> Oblivious Stack')
@@ -99,13 +92,15 @@ while True:							# Main program loop
 	print('\n[ENTER] --> EXIT\n\n')
 
 	obstruct = input('Please enter your selection : ')
+	N = int(input('\nInitial number of items/nodes = '))		# Get the number of items the stack will contain
+	L = math.ceil(math.log(N, 2))								# Calculate path-oram's tree height L 
+	oram = bt.binTree(L, Z, passHash)							# Construct an instance of the binTree class with the given parametres
 
 	if obstruct == '1':
 		os.system('clear')
 		blockAlias = 'item'
 		print('OBLIVIOUS STACK')
 		print('---------------')
-		N = int(input('\nPlease enter the number of items = '))				# Get the number of items the stack will contain
 		dataIn(N)
 		# present stack menu
 		break
@@ -114,7 +109,6 @@ while True:							# Main program loop
 		blockAlias = 'item'
 		print('OBLIVIOUS QUEUE')
 		print('---------------')
-		N = int(input('\nNumber of items = '))				# Get the number of items the stack will contain
 		dataIn(N)
 		# present queque menu
 		break
@@ -123,7 +117,6 @@ while True:							# Main program loop
 		blockAlias = 'node'
 		print('OBLIVIOUS HEAP')
 		print('--------------')
-		N = int(input('\nNumber of nodes = '))				# Get the number of items the stack will contain
 		dataIn(N)
 		# present heap menu
 		break
@@ -132,7 +125,6 @@ while True:							# Main program loop
 		blockAlias = 'node'
 		print('OBLIVIOUS AVL TREE')
 		print('------------------')
-		N = int(input('\nNumber of nodes = '))	# Get the number of items the stack will contain
 		dataIn(N)
 		# present AVL menu
 		break
@@ -163,7 +155,7 @@ while True:
 		print(sorted([blk[0] for blk in blocks]))
 		print()
 		nameBlk = input('Enter the name of the block you want to access : ')
-		asked = Access('read', nameBlk)
+		asked = oramAccess('read', nameBlk)
 		print("\nContents of block '{0}' :".format(nameBlk))
 		print(asked)
 		input('\nPlease press [ENTER] to continue...')
@@ -175,14 +167,14 @@ while True:
 		print()
 		nameBlk = input('Enter the name of the block you want to update : ')
 		newData = input("Enter the new contents of block '{0}' : ".format(nameBlk))
-		Access('write', nameBlk, newData)
+		oramAccess('write', nameBlk, newData)
 		print('\nOperation finished successfully!')
 		input('\nPlease press [ENTER] to continue...')
 
 	elif com == '3':
 		print()
 		for k in sorted(oram.nod.keys()):
-			print('Bucket id =', k)
+			print('\nBucket id =', k)
 			blst = [(unpad(cr.D(oram.nod[k].value[i][0], passHash).decode('utf-8')), unpad(cr.D(oram.nod[k].value[i][1], passHash).decode('utf-8'))) for i in range(Z)]
 			print(blst)
 		input('\nPlease press [ENTER] to continue...')
@@ -190,7 +182,7 @@ while True:
 	elif com == '4':
 		print()
 		for k in sorted(oram.nod.keys()):
-			print('Bucket id =', k)
+			print('\nBucket id =', k)
 			blst = [(oram.nod[k].value[i][0].hex(), oram.nod[k].value[i][1].hex()) for i in range(Z)]
 			print(blst)
 		input('\nPlease press [ENTER] to continue...')
