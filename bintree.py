@@ -29,19 +29,16 @@ class binTree(Node):
 		self.key = passH
 
 		self.nod = {}																		# Create a dictionary to hold the tree nodes
+		
+		self.emptyBucket = []																# Initialize empty bucket
+		self.dummyName = cr.E(b'------NULL------\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10', self.key)
+		self.dummyData = cr.E(b'---Dummy-Data---\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10', self.key)
+		for k in range(self.z):																# Create an empty bucket of z dummy blocks
+			self.emptyBucket.append((self.dummyName, self.dummyData))
 
-		for level in range(self.h + 1):														# Loop through the tree levels
-			
+		for level in range(self.h + 1):														# Loop through the tree levels	
 			for i in range(2**level):														# Create 2^level nodes in every level
-				self.bucket = []															# Initialize the bucket as a list
-
-				for k in range(self.z):														# Create z dummy blocks for each bucket
-					self.dummyName = cr.E(b'------NULL------\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10', self.key)
-					self.dummyData = cr.E(b'---Dummy-Data---\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10', self.key)
-					self.bucket.append((self.dummyName, self.dummyData))
-
-				self.nod[(level, i)] = Node((level, i), self.bucket)						# Create a node holding a bucket at level 'level'
-				
+				self.nod[(level, i)] = Node((level, i), self.emptyBucket)					# Create a node holding an empty bucket at level 'level'
 				if level != 0:																# If the current node isn't the root do the following: 
 					self.nod[(level, i)].parent = self.nod[(level-1, math.floor(i/2))]		# Set its parent node
 					if i%2 == 0:															
@@ -56,8 +53,8 @@ class binTree(Node):
 		self.path = []
 		
 		while self.currentNode.parent != None:					# Until you reach the root DO:
-			self.path.append(self.currentNode.value)
-			self.currentNode = self.currentNode.parent
+			self.path.append(self.currentNode.value)			# Append current node's bucket to path (list)
+			self.currentNode = self.currentNode.parent			# Move to parent node
 		self.path.append(self.currentNode.value)				# Append root bucket to the list
 		
 		return self.path

@@ -21,6 +21,7 @@ unpad = lambda s : s[:-ord(s[len(s)-1:])]							##
 
 def oramAccess(op, block_name, dataN = None):
 	
+	if op != 'read' and op != 'add': raise ValueError
 	def writeBucket(bucketID, block_list):
 		while len(block_list) < Z:											# Pad the bucket with dummy blocks until its size is Z
 			block_list.append(('------NULL------', '---Dummy-Data---'))		##
@@ -47,12 +48,13 @@ def oramAccess(op, block_name, dataN = None):
 
 	block = next((a for a in S if a[0] == block_name), (block_name, 'Not Found'))			# Read the block in question from the local stash
 
-	if op == 'write':							# If the operation is 'write':
+	if op == 'add':								# If the operation is 'add':
 		if block in S:
-			S.remove(block)						# Remove the old block from the stash
-		S.append((block_name, dataN))			# Add it back with the new data
+			S.remove(block)						# Remove the old block from the stash if it's there
+		S.append((block_name, dataN))			# Add the new block and data or the old block with new data
 
-	
+	if block in S:
+		S.remove(block)
 	S_temp = []
 	for l in range(L, -1, -1):
 		S_temp = [b for b in S if oram.Pl(oram.nod[L, x], l) == oram.Pl(oram.nod[L, position[b[0]]], l)]	# S_temp = {b in S : P(x, l) = P(position[b], l)}
@@ -75,7 +77,7 @@ def dataIn(Ν):
 	
 	# Write given data blocks in ORAM	
 	for j in blocks:
-		oramAccess('write', j[0], j[1])
+		oramAccess('add', j[0], j[1])
 
 
 
@@ -139,13 +141,16 @@ while True:
 	os.system('clear')						# Clear screen in order to present the options menu
 	print('P - O R A M    O P T I O N S')
 	print('-----------------------------')
-	print('[1] --> Read a data block')
-	print('[2] --> Update a data block')
-	print('[3] --> Display the ORAM binary tree (Decrypted)')
-	print('[4] --> Fetch all ORAM raw contents (Encrypted)')
+	print('[1] --> Read and Remove a data block')
+	print('[2] --> Add a new data block')
+	print('[3] --> Update a data block')
+	print('[4] --> Display the ORAM binary tree (Decrypted)')
+	print('[5] --> Fetch all ORAM raw contents (Encrypted)')
 	print('[ENTER] --> EXIT\n\n')
 
 	com = input('Please enter your choice : ')
+
+	cache = []
 
 	if com == '':
 		break
@@ -154,24 +159,37 @@ while True:
 		print('Available block names :')
 		print(sorted([blk[0] for blk in blocks]))
 		print()
-		nameBlk = input('Enter the name of the block you want to access : ')
+		nameBlk = input('Enter the label of the block : ')
 		asked = oramAccess('read', nameBlk)
+		cache.append(asked)
 		print("\nContents of block '{0}' :".format(nameBlk))
 		print(asked)
 		input('\nPlease press [ENTER] to continue...')
 
 	elif com == '2':
 		print()
+		print()
+		nameBlk = input('Enter the name of the block you want to add : ')
+		newData = input("Enter the data of the block '{0}' : ".format(nameBlk))
+		pos = random.randint(0, 2**L - 1)
+		position[nameBlk] = pos 							# Assign random integer between 0 and (2^L - 1) to new block
+		oramAccess('add', nameBlk, newData)
+		print('\nOperation finished successfully!')
+		input('\nPlease press [ENTER] to continue...')
+	
+	elif com == '3':
+		print()
 		print('Available block names :')
 		print(sorted([blk[0] for blk in blocks]))
 		print()
 		nameBlk = input('Enter the name of the block you want to update : ')
 		newData = input("Enter the new contents of block '{0}' : ".format(nameBlk))
-		oramAccess('write', nameBlk, newData)
+		oramAccess('add', nameBlk, newData)
 		print('\nOperation finished successfully!')
 		input('\nPlease press [ENTER] to continue...')
 
-	elif com == '3':
+
+	elif com == '4':
 		print()
 		for k in sorted(oram.nod.keys()):
 			print('\nBucket id =', k)
@@ -179,7 +197,7 @@ while True:
 			print(blst)
 		input('\nPlease press [ENTER] to continue...')
 
-	elif com == '4':
+	elif com == '5':
 		print()
 		for k in sorted(oram.nod.keys()):
 			print('\nBucket id =', k)
