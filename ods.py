@@ -16,7 +16,7 @@ cache = []										# Initialize local (client) cache
 
 BS = 16																#
 pad = lambda s: s + (BS - len(s) % BS) * chr(BS - len(s) % BS)		# pad and unpad methods used to match AES block size
-unpad = lambda s : s[:-ord(s[len(s)-1:])]							##
+unpad = lambda s: s[:-ord(s[len(s)-1:])]							##
 
 
 def oramAccess(op, block_name, dataN = None):
@@ -67,17 +67,23 @@ def oramAccess(op, block_name, dataN = None):
 def dataIn(Ν):
 	print('\n\nInitial data entry')
 	print('------------------')
+	
 	for i in range(N):
 		blockLabel = input('Label of {} No. {}: '.format(blockAlias, i))
 		blockData = input('Data of {} No. {}: '.format(blockAlias, i))
 		print()
-		blocks.append((blockLabel, blockData))		# Construct a list holding the data blocks
+		blocks.append((blockLabel, blockData, []))				# Construct a list holding the data blocks
 		pos = random.randint(0, 2**L - 1)
-		position[blockLabel] = pos 					# Assign random integer between 0 and (2^L - 1) to the current block
+		position[blockLabel] = pos 								# Assign random integer between 0 and (2^L - 1) to the current block
 	
+	for j in blocks:											# Store children id's in a list for each node tuple
+		if blocks.index(j) < len(blocks)-1:
+			print(j, j[2])
+			j[2].append(blocks[blocks.index(j)+1][0])
+
 	# Write given data blocks in ORAM	
-	for j in blocks:
-		oramAccess('add', j[0], j[1])
+	for k in blocks:
+		oramAccess('add', k[0], k[1])
 
 
 
@@ -85,6 +91,7 @@ def dataIn(Ν):
 while True:														# Main program loop
 
 	os.system('clear')											# Clear screen
+
 	print('CREATE AN ODS (Oblivious Data Structure)')
 	print('----------------------------------------')
 	print('\n[1] --> Oblivious Stack')
@@ -136,9 +143,9 @@ while True:														# Main program loop
 
 
 
-
 while True:
 	os.system('clear')						# Clear screen in order to present the options menu
+
 	print('P - O R A M    O P T I O N S')
 	print('-----------------------------')
 	print('[1] --> Read and Remove a data block')
