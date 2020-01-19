@@ -2,6 +2,7 @@ import sys
 import math
 import random
 import crypt as cr
+import json
 
 
 
@@ -33,8 +34,9 @@ class binTree(Node):
 		self.emptyBucket = []																# Initialize empty bucket
 		self.dummyName = cr.E(b'------NULL------\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10', self.key)
 		self.dummyData = cr.E(b'---Dummy-Data---\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10', self.key)
+		self.dummyCPos = cr.E(b'---Dummy-CPos---\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10', self.key)
 		for k in range(self.z):																# Create an empty bucket of z dummy blocks
-			self.emptyBucket.append((self.dummyName, self.dummyData))
+			self.emptyBucket.append((self.dummyName, self.dummyData, self.dummyCPos))
 
 		for level in range(self.h + 1):														# Loop through the tree levels	
 			for i in range(2**level):														# Create 2^level nodes in every level

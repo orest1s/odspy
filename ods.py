@@ -4,6 +4,7 @@ import math
 import random
 import bintree as bt
 import crypt as cr
+import json
 
 
 password = 'myP@th0rAM'							# Define the local password
@@ -19,15 +20,18 @@ pad = lambda s: s + (BS - len(s) % BS) * chr(BS - len(s) % BS)		# pad and unpad 
 unpad = lambda s: s[:-ord(s[len(s)-1:])]							##
 
 
-def oramAccess(op, block_name, dataN = None):
+def oramAccess(op, block_name, dataN = None, childrenPos = None):
 	
 	if op != 'read' and op != 'add': raise ValueError
+	
 	def writeBucket(bucketID, block_list):
-		while len(block_list) < Z:											# Pad the bucket with dummy blocks until its size is Z
-			block_list.append(('------NULL------', '---Dummy-Data---'))		##
+		while len(block_list) < Z:																# Pad the bucket with dummy blocks until its size is Z
+			block_list.append(('------NULL------', '---Dummy-Data---', '---Dummy-CPos---'))	  	##
 		
 		# Encrypt the bucket blocks to be written in the ORAM
-		enBucket = [(cr.E(bytes(pad(bl[0]).encode('utf-8')), passHash), cr.E(bytes(pad(bl[1]).encode('utf-8')), passHash)) for bl in block_list]
+		enBucket = [(cr.E(bytes(pad(bl[0]).encode('utf-8')), passHash),
+		cr.E(bytes(pad(bl[1]).encode('utf-8')), passHash),
+		cr.E(bytes(pad(bl[2]).encode('utf-8')), passHash)) for bl in block_list]
 		# Write the encrypted bucket in the ORAM
 		oram.nod[bucketID].value = enBucket									
 
@@ -37,21 +41,29 @@ def oramAccess(op, block_name, dataN = None):
 	pos = random.randint(0, 2**L - 1)
 	position[block_name] = pos 					# Assign new random integer between 0 and (2^L - 1) to the current block
 
+	# Update child's position in parent node
+	for block in blocks:
+		for k in block[2]:
+			if block_name in k:
+				block[2][k] = pos
+
 	oramPath = oram.P(oram.nod[L, x])			# Get the path of leaf x and store it locally in a list of buckets
 	
 	# Add to the local stash S the decrypted blocks of the oramPath list
 	for l in range(L+1):
 		for b in range(4):
-			blockContent = (unpad(cr.D(oramPath[l][b][0], passHash).decode('utf-8')), unpad(cr.D(oramPath[l][b][1], passHash).decode('utf-8')))
+			blockContent = (unpad(cr.D(oramPath[l][b][0], passHash).decode('utf-8')),
+			unpad(cr.D(oramPath[l][b][1], passHash).decode('utf-8')),
+			unpad(cr.D(oramPath[l][b][2], passHash).decode('utf-8')))
 			if blockContent[0] != '------NULL------':
 				S.append(blockContent)
 
 	block = next((a for a in S if a[0] == block_name), (block_name, 'Not Found'))			# Read the block in question from the local stash
 
-	if op == 'add':								# If the operation is 'add':
+	if op == 'add':												# If the operation is 'add':
 		if block in S:
-			S.remove(block)						# Remove the old block from the stash if it's there
-		S.append((block_name, dataN))			# Add the new block and data or the old block with new data
+			S.remove(block)										# Remove the old block from the stash if it's there
+		S.append((block_name, dataN, json.dumps(childrenPos)))	# Add the new block, data and its children positions or the old block with new data
 
 	if block in S:
 		S.remove(block)
@@ -72,19 +84,20 @@ def dataIn(Ν):
 		blockLabel = input('Label of {} No. {}: '.format(blockAlias, i))
 		blockData = input('Data of {} No. {}: '.format(blockAlias, i))
 		print()
-		blocks.append((blockLabel, blockData, []))				# Construct a list holding the data blocks
+		blocks.append([blockLabel, blockData, {}])				# Construct a list holding the data blocks
 		pos = random.randint(0, 2**L - 1)
 		position[blockLabel] = pos 								# Assign random integer between 0 and (2^L - 1) to the current block
-	
-	for j in blocks:											# Store children id's in a list for each node tuple
+		#print('Label : {} ---- Position {}: \n'.format(blockLabel, pos))
+	# Store children's positions in a dictionary for each node
+	labIter = iter(blocks[1:])											# Create an iterator over the blocks list starting from index 1
+	for j in blocks:											
 		if blocks.index(j) < len(blocks)-1:
-			print(j, j[2])
-			j[2].append(blocks[blocks.index(j)+1][0])
+			cName = next(labIter)[0]									# Assign to cName current block's child label
+			j[2] = {cName : position[blocks[blocks.index(j)+1][0]]}		# Add to current block the pair {Child_id : position}
 
 	# Write given data blocks in ORAM	
 	for k in blocks:
-		oramAccess('add', k[0], k[1])
-
+		oramAccess('add', k[0], k[1], k[2])
 
 
 
@@ -164,7 +177,7 @@ while True:
 	elif com == '1':
 		print()
 		print('Available block names :')
-		print(sorted([blk[0] for blk in blocks]))
+		print([blk[0] for blk in blocks])
 		print()
 		nameBlk = input('Enter the label of the block : ')
 		asked = oramAccess('read', nameBlk)
@@ -180,7 +193,7 @@ while True:
 		newData = input("Enter the data of the block '{0}' : ".format(nameBlk))
 		pos = random.randint(0, 2**L - 1)
 		position[nameBlk] = pos 							# Assign random integer between 0 and (2^L - 1) to new block
-		oramAccess('add', nameBlk, newData)
+		oramAccess('add', nameBlk, newData, {})
 		print('\nOperation finished successfully!')
 		input('\nPlease press [ENTER] to continue...')
 	
@@ -200,7 +213,9 @@ while True:
 		print()
 		for k in sorted(oram.nod.keys()):
 			print('\nBucket id =', k)
-			blst = [(unpad(cr.D(oram.nod[k].value[i][0], passHash).decode('utf-8')), unpad(cr.D(oram.nod[k].value[i][1], passHash).decode('utf-8'))) for i in range(Z)]
+			blst = [(unpad(cr.D(oram.nod[k].value[i][0], passHash).decode('utf-8')),
+			unpad(cr.D(oram.nod[k].value[i][1], passHash).decode('utf-8')),
+			unpad(cr.D(oram.nod[k].value[i][2], passHash).decode('utf-8'))) for i in range(Z)]
 			print(blst)
 		input('\nPlease press [ENTER] to continue...')
 
