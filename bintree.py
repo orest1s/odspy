@@ -32,11 +32,12 @@ class binTree(Node):
 		self.nod = {}																		# Create a dictionary to hold the tree nodes
 		
 		self.emptyBucket = []																# Initialize empty bucket
-		self.dummyName = cr.E(b'------NULL------\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10', self.key)
+		self.dummyLabel = cr.E(b'---Dummy-Label--\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10', self.key)
 		self.dummyData = cr.E(b'---Dummy-Data---\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10', self.key)
+		self.dummyPos = cr.E(b'9999999999999999\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10', self.key)
 		self.dummyCPos = cr.E(b'---Dummy-CPos---\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10', self.key)
 		for k in range(self.z):																# Create an empty bucket of z dummy blocks
-			self.emptyBucket.append((self.dummyName, self.dummyData, self.dummyCPos))
+			self.emptyBucket.append((self.dummyLabel, self.dummyData, self.dummyPos, self.dummyCPos))
 
 		for level in range(self.h + 1):														# Loop through the tree levels	
 			for i in range(2**level):														# Create 2^level nodes in every level
