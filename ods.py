@@ -13,7 +13,7 @@ passHash = cr.H(password)						# Hash the local password in order to use it as a
 Z = 4											# Define the number of blocks in a bucket
 S = []											# Initialize local stash as a list
 position = {}									# Initialize position map as a dictionary
-blocks = []										# Initialize the list holding the data blocks
+blocks = []										# Initialize the list holding the data blocks (nodes)
 cache = []										# Initialize local (client) cache
 
 BS = 16																#
@@ -38,20 +38,21 @@ def oramAccess(op, block_node):
 		oram.nod[bucketID].value = enBucket									
 
 	jnode = json.dumps(block_node.__dict__)			# Serialize object block_node to JSON
-	dnode = json.loads(jnode)						# Turn JSON to python dictionary
+	dnode = json.loads(jnode)						# Turn JSON into python dictionary
 	
 	global S
 	oramPath = []
 	x = dnode['pos']
-	pos = random.randint(0, 2**L - 1)
-	dnode['pos'] = pos 								# Assign new random integer between 0 and (2^L - 1) to the current block
+	#pos = random.randint(0, 2**L - 1)
+	#dnode['pos'] = pos 								# Assign new random integer between 0 and (2^L - 1) to the current block
 
+	'''
 	# Update child's position in parent node
 	for block in blocks:
 		for k in block.chPos:
 			if dnode['label'] in k:
 				block.chPos[k] = pos
-
+	'''
 	oramPath = oram.P(oram.nod[L, x])				# Get the path of leaf x and store it locally in a list of buckets
 	
 	# Add to the local stash S the decrypted blocks of the oramPath list
@@ -70,7 +71,6 @@ def oramAccess(op, block_node):
 		if block in S:
 			S.remove(block)															# Remove the old block from the stash if it's there
 		S.append((dnode['label'], dnode['data'], dnode['pos'], dnode['chPos']))		# Add the new block, data and its children positions or the old block with new data
-		print(S)
 
 	if block in S:
 		S.remove(block)
@@ -81,12 +81,15 @@ def oramAccess(op, block_node):
 		S = [item for item in S if item not in S_temp]
 		writeBucket(oram.Pl(oram.nod[L, x], l), S_temp)
 
-	return block[1]
+	if op == 'read':
+		askedBlock = odnode.Odnode(block[0], block[1], block[2], json.loads(str(block[3]).replace("'", '"')))
+		return askedBlock
 
-def dataIn(Ν):
+def dataInput(Ν):
 	print('\n\nInitial data entry')
 	print('------------------')
 	
+	global root
 	for i in range(N):
 		blockLabel = input('Label of {} No. {}: '.format(blockAlias, i))
 		blockData = input('Data of {} No. {}: '.format(blockAlias, i))
@@ -96,13 +99,14 @@ def dataIn(Ν):
 		blocks.append(blkNode)										# Construct a list holding the data blocks (nodes) 								
 
 	# Store children's positions in a dictionary for each node
-	for j in blocks:											
-		if blocks.index(j) < len(blocks)-1:
-			#cName = next(labIter.label)									
+	for i, j in enumerate(blocks):											
+		if blocks.index(j) < len(blocks)-1:									
 			cName = blocks[blocks.index(j)+1].label					# Assign to cName current block's child label
 			cPos = blocks[blocks.index(j)+1].pos					# Assign to cPos current block's child position
 			j.chPos = {cName : cPos}								# Add to current block the pair {Child_id : position}
-	
+			if i == 0:												# Store the root of the ..
+				root = j											# .. data structure in variable 'root'
+
 	# Write given data blocks in ORAM	
 	for k in blocks:
 		oramAccess('add', k)
@@ -131,7 +135,7 @@ while True:														# Main program loop
 		blockAlias = 'item'
 		print('OBLIVIOUS STACK')
 		print('---------------')
-		dataIn(N)
+		dataInput(N)
 		# present stack menu
 		break
 	elif oblStruct == '2':
@@ -139,7 +143,7 @@ while True:														# Main program loop
 		blockAlias = 'item'
 		print('OBLIVIOUS QUEUE')
 		print('---------------')
-		dataIn(N)
+		dataInput(N)
 		# present queque menu
 		break
 	elif oblStruct == '3':
@@ -147,7 +151,7 @@ while True:														# Main program loop
 		blockAlias = 'node'
 		print('OBLIVIOUS HEAP')
 		print('--------------')
-		dataIn(N)
+		dataInput(N)
 		# present heap menu
 		break
 	elif oblStruct == '4':
@@ -155,7 +159,7 @@ while True:														# Main program loop
 		blockAlias = 'node'
 		print('OBLIVIOUS AVL TREE')
 		print('------------------')
-		dataIn(N)
+		dataInput(N)
 		# present AVL menu
 		break
 	elif oblStruct == '':
@@ -178,20 +182,34 @@ while True:
 
 	com = input('Please enter your choice : ')
 
-	cache = []
-
 	if com == '':
 		break
+	
+	############### Read And Remove ###############
 	elif com == '1':
 		print()
-		print('Available block names :')
-		print([blk[0] for blk in blocks])
-		print()
 		nameBlk = input('Enter label of the block to remove: ')
-		asked = oramAccess('read', nameBlk)
-		cache.append(asked)
-		print("\nContents of removed block '{0}' :".format(nameBlk))
-		print(asked)
+		
+		# Root node removal from ORAM to cache
+		cache = []
+		ask = odnode.Odnode(root.label, root.data, root.pos, root.chPos)
+		fetch = oramAccess('read', ask)
+		cache.append(fetch)
+		
+		isInCache = any(x.label == nameBlk for x in cache)				# True if the block in question is already in cache
+		
+		if isInCache == False:
+			n = 0
+			while isInCache == False:
+				childDictKeys = list(cache[n].chPos.keys())
+				currentName = childDictKeys[0]
+				currentPosition = cache[n].chPos[currentName]
+				ask = odnode.Odnode(currentName, 'null', currentPosition, {})
+				fetch = oramAccess('read', ask)
+				cache.append(fetch)
+				isInCache = any(x.label == nameBlk for x in cache)
+				n += 1
+		print([a.label for a in cache])
 		print('\nOperation finished successfully!')
 		input('\nPlease press [ENTER] to continue...')
 
