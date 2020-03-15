@@ -65,7 +65,7 @@ def oramAccess(op, block_node):
 			if blockContent[0] != '---Dummy-Label--':
 				S.append(blockContent)
 
-	block = next((a for a in S if a[0] == dnode['label']), (dnode['label'], 'Not Found'))			# Read the block in question from the local stash
+	block = next((a for a in S if a[0] == dnode['label']), (dnode['label'], 'Not Found'))	# Read the block in question from the local stash
 
 	if op == 'add':																	# If the operation is 'add':
 		if block in S:
@@ -166,7 +166,12 @@ while True:														# Main program loop
 		break
 
 
+def odsStart():								# Update cache to contain the root
+	global cache
+	cache = []
+	cache.append(root)
 
+odsStart()
 
 while True:
 	os.system('clear')						# Clear screen in order to present the options menu
@@ -185,44 +190,49 @@ while True:
 	if com == '':
 		break
 	
-	############### Read And Remove ###############
+	###############  Read And Remove  ###############
 	elif com == '1':
-		print()
-		nameBlk = input('Enter label of the block to remove: ')
+		nodeName = input('\nEnter label of the block to remove: ')
+
+		def readAndRemove(nameBlk):
+			# Remove root node from ORAM
+			ask = odnode.Odnode(root.label, root.data, root.pos, root.chPos)
+			fetch = oramAccess('read', ask)
+			
+			isInCache = any(x.label == nameBlk for x in cache)				# True if the block in question is already in cache
+			if isInCache == False:
+				n = 0
+				while isInCache == False:											#
+					childDictKeys = list(cache[n].chPos.keys())						#
+					currentName = childDictKeys[0]									# 
+					currentPosition = cache[n].chPos[currentName]					# Traverse through the nodes .. 
+					ask = odnode.Odnode(currentName, 'null', currentPosition, {})	# .. using their children positions ..
+					fetch = oramAccess('read', ask)									# .. until the requested one is found.
+					cache.append(fetch)												#
+					isInCache = any(x.label == nameBlk for x in cache)				#
+					n += 1															#
 		
-		# Root node removal from ORAM to cache
-		cache = []
-		ask = odnode.Odnode(root.label, root.data, root.pos, root.chPos)
-		fetch = oramAccess('read', ask)
-		cache.append(fetch)
-		
-		isInCache = any(x.label == nameBlk for x in cache)				# True if the block in question is already in cache
-		
-		if isInCache == False:
-			n = 0
-			while isInCache == False:
-				childDictKeys = list(cache[n].chPos.keys())
-				currentName = childDictKeys[0]
-				currentPosition = cache[n].chPos[currentName]
-				ask = odnode.Odnode(currentName, 'null', currentPosition, {})
-				fetch = oramAccess('read', ask)
-				cache.append(fetch)
-				isInCache = any(x.label == nameBlk for x in cache)
-				n += 1
+		readAndRemove(nodeName)
 		print([a.label for a in cache])
 		print('\nOperation finished successfully!')
 		input('\nPlease press [ENTER] to continue...')
 
+	#####################   Add   #####################
 	elif com == '2':
-		print()
-		print()
-		nameBlk = input('Enter the name of the block you want to add : ')
-		newData = input("Enter the data of the block '{0}' : ".format(nameBlk))
-		pos = random.randint(0, 2**L - 1)
-		position[nameBlk] = pos 							# Assign random integer between 0 and (2^L - 1) to new block
-		oramAccess('add', nameBlk, newData, {})
+		newBL = input('\nEnter the label of the block you want to add : ')
+		newBD = input("Enter the data of the block '{0}' : ".format(newBL))
+
+		def add(newBlkLabel, newBlkData):
+			newBlkNode = odnode.Odnode(newBlkLabel, newBlkData, 0, {})			# Create instance of Odnode for the new block (node)
+			cache.append(newBlkNode)										# Insert new block in cache
+
+		add(newBL, newBD)
+		print([a.label for a in cache])
 		print('\nOperation finished successfully!')
 		input('\nPlease press [ENTER] to continue...')
+
+
+
 	
 	elif com == '3':
 		print()
