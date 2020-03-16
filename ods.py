@@ -8,6 +8,8 @@ import json
 import odnode
 
 
+
+
 password = 'myP@th0rAM'							# Define the local password
 passHash = cr.H(password)						# Hash the local password in order to use it as a key for AES
 Z = 4											# Define the number of blocks in a bucket
@@ -23,7 +25,7 @@ unpad = lambda s: s[:-ord(s[len(s)-1:])]							##
 
 def oramAccess(op, block_node):
 	
-	if op != 'read' and op != 'add': raise ValueError
+	if op != 'readandremove' and op != 'add': raise ValueError
 	
 	def writeBucket(bucketID, block_list):
 		while len(block_list) < Z:																					# Pad the bucket with dummy blocks until its size is Z
@@ -43,16 +45,7 @@ def oramAccess(op, block_node):
 	global S
 	oramPath = []
 	x = dnode['pos']
-	#pos = random.randint(0, 2**L - 1)
-	#dnode['pos'] = pos 								# Assign new random integer between 0 and (2^L - 1) to the current block
 
-	'''
-	# Update child's position in parent node
-	for block in blocks:
-		for k in block.chPos:
-			if dnode['label'] in k:
-				block.chPos[k] = pos
-	'''
 	oramPath = oram.P(oram.nod[L, x])				# Get the path of leaf x and store it locally in a list of buckets
 	
 	# Add to the local stash S the decrypted blocks of the oramPath list
@@ -65,7 +58,7 @@ def oramAccess(op, block_node):
 			if blockContent[0] != '---Dummy-Label--':
 				S.append(blockContent)
 
-	block = next((a for a in S if a[0] == dnode['label']), (dnode['label'], 'Not Found'))	# Read the block in question from the local stash
+	block = next((a for a in S if a[0] == dnode['label']), ('Not Found', 'Null', 0, {}))	# Read the block in question from the local stash
 
 	if op == 'add':																	# If the operation is 'add':
 		if block in S:
@@ -81,10 +74,13 @@ def oramAccess(op, block_node):
 		S = [item for item in S if item not in S_temp]
 		writeBucket(oram.Pl(oram.nod[L, x], l), S_temp)
 
-	if op == 'read':
+	if op == 'readandremove':
 		askedBlock = odnode.Odnode(block[0], block[1], block[2], json.loads(str(block[3]).replace("'", '"')))
 		return askedBlock
 
+
+
+#########################  Initial data entry function  #########################
 def dataInput(Ν):
 	print('\n\nInitial data entry')
 	print('------------------')
@@ -113,7 +109,9 @@ def dataInput(Ν):
 
 
 
-while True:														# Main program loop
+
+###############################  Main program loop  ###############################
+while True:
 
 	os.system('clear')											# Clear screen
 
@@ -166,9 +164,16 @@ while True:														# Main program loop
 		break
 
 
+
+
+
 def odsStart():								# Update cache to contain the root
 	global cache
-	cache = []
+	global root
+	cache.clear()
+	# Remove root node from ORAM on first access
+	ask = odnode.Odnode(root.label, root.data, root.pos, root.chPos)
+	oramAccess('readandremove', ask)
 	cache.append(root)
 
 odsStart()
@@ -176,77 +181,163 @@ odsStart()
 while True:
 	os.system('clear')						# Clear screen in order to present the options menu
 
-	print('P - O R A M    O P T I O N S')
-	print('-----------------------------')
-	print('[1] --> Read and Remove a data block')
-	print('[2] --> Add a new data block')
-	print('[3] --> Update a data block')
-	print('[4] --> Display the ORAM binary tree (Decrypted)')
-	print('[5] --> Fetch all ORAM raw contents (Encrypted)')
+	print('O D S  framework  O P T I O N S')
+	print('-------------------------------')
+	print('[1] --> Read a data block')
+	print('[2] --> Insert a new data block')
+	print('[3] --> Update(Write) a data block')
+	print('[4] --> Delete a data block')
+	print('[5] --> Finalize')
+	print('[6] --> Display the client cache')
+	print('[7] --> Display the ORAM binary tree (Decrypted)')
+	print('[8] --> Display the ORAM binary tree (Encrypted)')
 	print('[ENTER] --> EXIT\n\n')
 
 	com = input('Please enter your choice : ')
 
+	
+	def read(nodeLabel):
+		global cache
+		'''
+		# Remove root node from ORAM in first access
+		if len(cache) == 1:
+			ask = odnode.Odnode(root.label, root.data, root.pos, root.chPos)
+			fetch = oramAccess('readandremove', ask)
+			'''
+		
+		isInCache = any(x.label == nodeLabel for x in cache)						# True if the block in question is already in cache
+		if isInCache == False:
+			n = 0
+			while isInCache == False:												#
+				childDictKeys = list(cache[n].chPos.keys())							#
+				currentName = childDictKeys[0]										# 
+				currentPosition = cache[n].chPos[currentName]						# Traverse through the nodes .. 
+				if not any(x.label == currentName for x in cache):					# .. using their children positions ..
+					ask = odnode.Odnode(currentName, 'null', currentPosition, {})	# .. until the requested one is found.
+					fetch = oramAccess('readandremove', ask)						# 
+					cache.append(fetch)												#
+				isInCache = any(x.label == nodeLabel for x in cache)				#
+				n += 1																#
+	
+
 	if com == '':
 		break
 	
-	###############  Read And Remove  ###############
+
+
+	###################  Read  ###################
 	elif com == '1':
-		nodeName = input('\nEnter label of the block to remove: ')
-
-		def readAndRemove(nameBlk):
-			# Remove root node from ORAM
-			ask = odnode.Odnode(root.label, root.data, root.pos, root.chPos)
-			fetch = oramAccess('read', ask)
-			
-			isInCache = any(x.label == nameBlk for x in cache)				# True if the block in question is already in cache
-			if isInCache == False:
-				n = 0
-				while isInCache == False:											#
-					childDictKeys = list(cache[n].chPos.keys())						#
-					currentName = childDictKeys[0]									# 
-					currentPosition = cache[n].chPos[currentName]					# Traverse through the nodes .. 
-					ask = odnode.Odnode(currentName, 'null', currentPosition, {})	# .. using their children positions ..
-					fetch = oramAccess('read', ask)									# .. until the requested one is found.
-					cache.append(fetch)												#
-					isInCache = any(x.label == nameBlk for x in cache)				#
-					n += 1															#
+		blockName = input('\nEnter label of the block you want to read: ')
 		
-		readAndRemove(nodeName)
-		print([a.label for a in cache])
+		read(blockName)
 		print('\nOperation finished successfully!')
 		input('\nPlease press [ENTER] to continue...')
-
-	#####################   Add   #####################
-	elif com == '2':
-		newBL = input('\nEnter the label of the block you want to add : ')
-		newBD = input("Enter the data of the block '{0}' : ".format(newBL))
-
-		def add(newBlkLabel, newBlkData):
-			newBlkNode = odnode.Odnode(newBlkLabel, newBlkData, 0, {})			# Create instance of Odnode for the new block (node)
-			cache.append(newBlkNode)										# Insert new block in cache
-
-		add(newBL, newBD)
-		print([a.label for a in cache])
-		print('\nOperation finished successfully!')
-		input('\nPlease press [ENTER] to continue...')
-
-
 
 	
-	elif com == '3':
-		print()
-		print('Available block names :')
-		print(sorted([blk[0] for blk in blocks]))
-		print()
-		nameBlk = input('Enter the name of the block you want to update : ')
-		newData = input("Enter the new contents of block '{0}' : ".format(nameBlk))
-		oramAccess('add', nameBlk, newData)
+	
+	####################  Insert  ####################
+	elif com == '2':
+		newBlockName = input('\nEnter the label of the block you want to insert : ')
+		newBlockData = input("Enter the data of the block '{0}' : ".format(newBlockName))
+
+		def insert(newNodeLabel, newNodeData):
+			global cache
+			newNode = odnode.Odnode(newNodeLabel, newNodeData, 0, {})		# Create instance of Odnode for the new block (node)
+			eos = False
+			while eos == False:
+				lastInCache = cache[-1]
+				if lastInCache.chPos == {}:
+					eos = True
+				else:
+					read(list(lastInCache.chPos.keys())[0])
+			cache.append(newNode)											# Insert new block in cache
+
+		insert(newBlockName, newBlockData)
 		print('\nOperation finished successfully!')
 		input('\nPlease press [ENTER] to continue...')
 
 
+
+	################   Update(Write)   ################
+	elif com == '3':
+		blockName = input('\nEnter label of the block you want to update: ')
+		newBlockData = input("Enter the data of the block '{0}' : ".format(blockName))
+		
+		def write(nodeLabel, newData):
+			global cache
+			isInCache = any(x.label == nodeLabel for x in cache)				# True if the block in question is already in cache
+			if isInCache == False:
+				read(nodeLabel)
+			next((n for n in cache if n.label == nodeLabel)).data = newData
+
+		write(blockName, newBlockData)
+		print('\nOperation finished successfully!')
+		input('\nPlease press [ENTER] to continue...')
+
+
+
+	#################   Delete   #################
 	elif com == '4':
+		blockName = input('\nEnter label of the block you want to delete: ')
+
+		def delete(nodeLabel):
+			global cache
+			isInCache = any(x.label == nodeLabel for x in cache)				# True if the block in question is already in cache
+			if isInCache == False:
+				read(nodeLabel)
+			cache.remove(next((n for n in cache if n.label == nodeLabel)))
+
+		delete(blockName)
+		print('\nOperation finished successfully!')
+		input('\nPlease press [ENTER] to continue...')
+
+
+
+	################   Finalize   ################
+	elif com == '5':
+
+		def finalize():
+			global cache
+			global root
+
+			# Assign new random position to each node in cache
+			for n in cache:
+				pos = random.randint(0, 2**L - 1)
+				n.pos = pos																				
+
+			# Update children's positions in each node
+			for i, j in enumerate(cache):											
+				if cache.index(j) < len(cache)-1:									
+					cName = cache[cache.index(j)+1].label					# Assign to cName current block's child label
+					cPos = cache[cache.index(j)+1].pos						# Assign to cPos current block's child position
+					j.chPos = {cName : cPos}								# Add to current block the pair {Child_id : position}
+					if i == 0:												# Store the root of the ..
+						root = j											# .. data structure in variable 'root'
+
+			# Write cahe back to ORAM and empty it
+			for k in cache:
+				oramAccess('add', k)
+			
+			# Empty client cache
+			cache.clear()
+
+		finalize()
+		#odsStart()
+		print('\nOperation finished successfully!')
+		input('\nPlease press [ENTER] to continue...')
+
+
+
+	###################  Display the ORAM (Decrypted)  ###################
+	elif com == '6':
+		print()
+		print([a.label for a in cache])
+		input('\nPlease press [ENTER] to continue...')
+	
+	
+
+	###################  Display the ORAM (Decrypted)  ###################
+	elif com == '7':
 		print()
 		for k in sorted(oram.nod.keys()):
 			print('\nBucket id =', k)
@@ -257,7 +348,10 @@ while True:
 			print(blst)
 		input('\nPlease press [ENTER] to continue...')
 
-	elif com == '5':
+
+	
+	###################  Display the ORAM (Encrypted)  ###################
+	elif com == '8':
 		print()
 		for k in sorted(oram.nod.keys()):
 			print('\nBucket id =', k)
