@@ -32,10 +32,10 @@ class binTree(Node):
 		self.nod = {}																		# Create a dictionary to hold the tree nodes
 		
 		self.emptyBucket = []																# Initialize empty bucket
-		self.dummyLabel = cr.E(b'---Dummy-Label--\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10', self.key)
-		self.dummyData = cr.E(b'---Dummy-Data---\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10', self.key)
+		self.dummyLabel = cr.E(b'----------------\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10', self.key)
+		self.dummyData = cr.E(b'----------------\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10', self.key)
 		self.dummyPos = cr.E(b'9999999999999999\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10', self.key)
-		self.dummyCPos = cr.E(b'---Dummy-CPos---\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10', self.key)
+		self.dummyCPos = cr.E(b'----------------\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10', self.key)
 		for k in range(self.z):																# Create an empty bucket of z dummy blocks
 			self.emptyBucket.append((self.dummyLabel, self.dummyData, self.dummyPos, self.dummyCPos))
 
