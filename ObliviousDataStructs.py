@@ -58,6 +58,7 @@ def oramAccess(op, block_node):
 	block = next((a for a in S if a[0] == dnode['label']), ('None', 'Null', 0, {}))	# Read the block in question from the local stash
 
 	if op == 'add':																	# If the operation is 'add':
+		print('(Add)')
 		if block in S:
 			S.remove(block)															# Remove the old block from the stash if it's there
 		S.append((dnode['label'], dnode['data'], dnode['pos'], dnode['chPos']))		# Add the new block, data and its children positions or the old block with new data
@@ -72,6 +73,7 @@ def oramAccess(op, block_node):
 		writeBucket(oram.Pl(oram.nod[L, x], l), S_temp)											# WriteBucket(P(x, l), S_temp)
 
 	if op == 'readandremove':
+		print('(ReadAndRemove)')
 		askedBlock = odnode.Odnode(block[0], block[1], block[2], json.loads(str(block[3]).replace("'", '"')))
 		return askedBlock
 
@@ -106,6 +108,60 @@ def dataInput(Ν):
 		oramAccess('add', k)
 
 
+def heapify(nodelist, index, N):
+	left = 2*index + 1
+	right = 2*index + 2
+
+	if (left < N) and (int(nodelist[left].data) < int(nodelist[index].data)):
+		smallest = left
+	else:
+		smallest = index
+
+	if (right < N) and (int(nodelist[right].data) < int(nodelist[smallest].data)):
+		smallest = right
+
+	if smallest != index:
+		swap = nodelist[index]
+		nodelist[index] = nodelist[smallest]
+		nodelist[smallest] = swap
+		heapify(nodelist, smallest, N)
+	blocks[:] = nodelist
+
+
+def dataInputHeap(Ν):
+	print('\n\nInitial data entry')
+	print('------------------')
+	
+	global root
+	for i in range(N):
+		blockLabel = input('ID of {} No. {}: '.format(blockAlias, i))
+		blockData = input('Key of {} No. {}: '.format(blockAlias, i))
+		print()
+		pos = random.randint(0, 2**L - 1)
+		blkNode = odnode.Odnode(blockLabel, blockData, pos, {})		# Create instance of Odnode class and assign the values of the current block (node)
+		blocks.append(blkNode)										# Construct a list holding the data blocks (nodes)
+
+	lastParent = math.floor((len(blocks)-1)/2)
+	print([(x.label, x.data) for x in blocks])	
+	for i in range(lastParent, -1, -1):
+		heapify(blocks, i, N)			
+	
+	# Store children's positions in a dictionary for each node
+	for i, j in enumerate(blocks):											
+		if blocks.index(j) < lastParent:							# Until we reach the index of the parent of last node in the heap									
+			cLName = blocks[2*blocks.index(j)+1].label				# Assign to cLName current block's Left child label
+			cLPos = blocks[2*blocks.index(j)+1].pos					# Assign to cLPos current block's Left child position
+			cRName = blocks[2*blocks.index(j)+2].label				# Assign to cRName current block's Right child label
+			cRPos = blocks[2*blocks.index(j)+2].pos					# Assign to cRPos current block's Right child position
+			j.chPos = {cLName : cLPos, cRName : cRPos}				# Add to current block the children positions dictionary
+			if i == 0:												# Store the root of the ..
+				root = j											# .. data structure in variable 'root'
+
+	# Write given data blocks in ORAM	
+	for k in blocks:
+		oramAccess('add', k)
+
+
 
 
 
@@ -119,8 +175,8 @@ def odsStart():								# Update cache to contain the root
 	cache.clear()
 	if root != None:
 		# Get root node from ORAM on first access
-		ask = odnode.Odnode(root.label, root.data, root.pos, root.chPos)
-		oramAccess('readandremove', ask)
+		#ask = odnode.Odnode(root.label, root.data, root.pos, root.chPos)
+		#oramAccess('readandremove', ask)
 		cache.append(root)
 
 
@@ -248,14 +304,14 @@ while True:
 	cache = []										# Initialize local (client) cache
 
 	os.system('clear')											
-	print('CREATE AN ODS (Oblivious Data Structure)')
-	print('----------------------------------------')
+	print('\n\nODS (Oblivious Data Structure) CREATION')
+	print('---------------------------------------')
 	print('\n[1] --> Oblivious Stack')
 	print('\n[2] --> Oblivious Queue')
 	print('\n[3] --> Oblivious Heap')
 	print('\n[4] --> Oblivious AVL Tree')
 	print('\n[5] --> Path ORAM explorer')
-	print('\n[ENTER] --> EXIT\n\n')
+	print('\n[ENTER] --> EXIT\n\n\n')
 
 	oblStruct = input('Please enter your selection : ')
 	
@@ -268,7 +324,7 @@ while True:
 		cache.clear()
 		os.system('clear')
 		blockAlias = 'item'
-		print('OBLIVIOUS STACK')
+		print('\n\nOBLIVIOUS STACK')
 		print('---------------')
 		dataInput(N)
 		
@@ -276,11 +332,12 @@ while True:
 			# present stack menu
 			os.system('clear')
 			
-			print('Oblivious Stack Options')
+			print('\n\nOblivious Stack Options')
 			print('-----------------------')
 			print('\n[1] --> Push(item)')
 			print('\n[2] --> Pop()')
-			print('\n[ENTER] --> EXIT\n\n')
+			print('\n[3] --> IsEmpty()')
+			print('\n[ENTER] --> EXIT\n\n\n')
 
 			select = input('Please enter your selection : ')
 
@@ -290,7 +347,7 @@ while True:
 			odsStart()
 			if select == '1':
 				newBlockName = input('\nEnter the ID of the item you want to push : ')
-				newBlockData = input("Enter the data of the item '{0}' : ".format(newBlockName))
+				newBlockData = input("Enter the data of item '{0}' : ".format(newBlockName))
 
 				def push(node, data):
 					insert(node, data)
@@ -332,6 +389,20 @@ while True:
 					print('\nThe Oblivious Stack is empty!')
 				
 				input('\nPlease press [ENTER] to continue...')
+			
+			if select == '3':
+				
+				def isEmpty():
+					return (len(cache) == 0)
+
+				ans = isEmpty()
+				if ans:
+					print('\nTRUE - The Oblivious Stack is empty.')
+				else:
+					print('\nFALSE - The Oblivious Stack is NOT empty.')
+				
+				input('\nPlease press [ENTER] to continue...')
+
 
 
 
@@ -339,7 +410,7 @@ while True:
 		cache.clear()
 		os.system('clear')
 		blockAlias = 'item'
-		print('OBLIVIOUS QUEUE')
+		print('\n\nOBLIVIOUS QUEUE')
 		print('---------------')
 		dataInput(N)
 		
@@ -347,11 +418,12 @@ while True:
 			# present queue menu
 			os.system('clear')
 			
-			print('Oblivious Queue Options')
+			print('\n\nOblivious Queue Options')
 			print('-----------------------')
 			print('\n[1] --> Enqueue(item)')
 			print('\n[2] --> Dequeue()')
-			print('\n[ENTER] --> EXIT\n\n')
+			print('\n[3] --> IsEmpty()')
+			print('\n[ENTER] --> EXIT\n\n\n')
 
 			select = input('Please enter your selection : ')
 
@@ -361,7 +433,7 @@ while True:
 			odsStart()
 			if select == '1':
 				newBlockName = input('\nEnter the ID of the item you want to enqueue : ')
-				newBlockData = input("Enter the data of the item '{0}' : ".format(newBlockName))
+				newBlockData = input("Enter the data of item '{0}' : ".format(newBlockName))
 
 				def enqueue(node, data):
 					insert(node, data)
@@ -396,18 +468,100 @@ while True:
 					print('\nThe Oblivious Queue is empty!')
 				
 				input('\nPlease press [ENTER] to continue...')
+			
+			if select == '3':
+				
+				def isEmpty():
+					return (len(cache) == 0)
+
+				ans = isEmpty()
+				
+				if ans:
+					print('\nTRUE - The Oblivious Queue is empty.')
+				else:
+					print('\nFALSE - The Oblivious Queue is NOT empty.')
+				
+				input('\nPlease press [ENTER] to continue...')
 
 
 
 	elif oblStruct == '3':
 		cache.clear()
 		os.system('clear')
-		blockAlias = 'node'
-		print('OBLIVIOUS HEAP')
-		print('--------------')
-		dataInput(N)
-		# present heap menu
-		break
+		blockAlias = 'element'
+		print('\n\nOBLIVIOUS HEAP (PRIORITY QUEUE)')
+		print('-------------------------------')
+		dataInputHeap(N)
+		
+		while True:
+			# present queue menu
+			os.system('clear')
+			
+			print('\n\nOblivious Heap Options')
+			print('----------------------')
+			print('\n[1] --> Insert(element)')
+			print('\n[2] --> ExtractMin()')
+			print('\n[3] --> IsEmpty()')
+			print('\n[ENTER] --> EXIT\n\n\n')
+
+			select = input('Please enter your selection : ')
+
+			if select == '':
+				break
+
+			odsStart()
+			if select == '1':
+				newBlockName = input('\nEnter the ID of the element you want to insert : ')
+				newBlockData = input("Enter the key of element'{0}' : ".format(newBlockName))
+
+				def insertKey(id, key):
+					insert(id, key)
+					finalize()
+				
+				insert(newBlockName, newBlockData)
+
+				print('\nOperation finished successfully!')
+				input('\nPlease press [ENTER] to continue...')
+		
+			if select == '2':
+
+				def extractMin():
+					global cache
+					global root
+					
+					tail = ()
+
+					if root != None:
+						tail = (root.label, root.data)
+						delete(root.label)
+						if cache != []:
+							root = cache[0]
+						finalize()
+					return tail
+				
+				tailItem = dequeue()
+				if tailItem != ():
+					print('\nItem ID :', tailItem[0])
+					print('Item Data :', tailItem[1])
+				else:
+					print('\nThe Oblivious Priority Queue is empty!')
+				
+				input('\nPlease press [ENTER] to continue...')
+			
+			if select == '3':
+				
+				def isEmpty():
+					return (len(cache) == 0)
+
+				ans = isEmpty()
+				
+				if ans:
+					print('\nTRUE - The Oblivious Priority Queue is empty.')
+				else:
+					print('\nFALSE - The Oblivious Priority Queue is NOT empty.')
+				
+				input('\nPlease press [ENTER] to continue...')
+		
 	elif oblStruct == '4':
 		cache.clear()
 		os.system('clear')
@@ -425,7 +579,7 @@ while True:
 			print('------------------')
 			print('\n[1] --> Display the ORAM binary tree (Decrypted)')
 			print('\n[2] --> Display the ORAM binary tree (Encrypted)')
-			print('\n[ENTER] --> EXIT\n\n')
+			print('\n[ENTER] --> EXIT\n\n\n')
 
 			com = input('Please enter your choice : ')
 
