@@ -79,13 +79,14 @@ def oramAccess(op, block_node):
 
 
 
-###########################  Initial data entry function  ###########################
+###########################  Initial data entry functions  ###########################
 
 def dataInput(Ν):
 	print('\n\nInitial data entry')
 	print('------------------')
 	
 	global root
+	global top 
 	for i in range(N):
 		blockLabel = input('Label of {} No. {}: '.format(blockAlias, i))
 		blockData = input('Data of {} No. {}: '.format(blockAlias, i))
@@ -96,17 +97,19 @@ def dataInput(Ν):
 
 	# Store children's positions in a dictionary for each node
 	for i, j in enumerate(blocks):											
-		if blocks.index(j) < len(blocks)-1:									
-			cName = blocks[blocks.index(j)+1].label					# Assign to cName current block's child label
-			cPos = blocks[blocks.index(j)+1].pos					# Assign to cPos current block's child position
+		if i < len(blocks)-1:									
+			cName = blocks[i+1].label								# Assign to cName current block's child label
+			cPos = blocks[i+1].pos									# Assign to cPos current block's child position
 			j.chPos = {cName : cPos}								# Add to current block the pair {Child_id : position}
 			if i == 0:												# Store the root of the ..
 				root = j											# .. data structure in variable 'root'
+	top = blocks[len(blocks)-1]										# Store last node of the list in 'top'
 
 	# Write given data blocks in ORAM	
 	for k in blocks:
 		oramAccess('add', k)
 
+###################################################################
 
 def heapify(nodelist, index, N):
 	left = 2*index + 1
@@ -121,18 +124,18 @@ def heapify(nodelist, index, N):
 		smallest = right
 
 	if smallest != index:
-		swap = nodelist[index]
-		nodelist[index] = nodelist[smallest]
-		nodelist[smallest] = swap
+		nodelist[index], nodelist[smallest] = nodelist[smallest], nodelist[index]	# Perform swap if needed
 		heapify(nodelist, smallest, N)
 	blocks[:] = nodelist
 
+###################################################################
 
 def dataInputHeap(Ν):
 	print('\n\nInitial data entry')
 	print('------------------')
 	
 	global root
+	global last
 	for i in range(N):
 		blockLabel = input('ID of {} No. {}: '.format(blockAlias, i))
 		blockData = input('Key of {} No. {}: '.format(blockAlias, i))
@@ -141,19 +144,30 @@ def dataInputHeap(Ν):
 		blkNode = odnode.Odnode(blockLabel, blockData, pos, {})		# Create instance of Odnode class and assign the values of the current block (node)
 		blocks.append(blkNode)										# Construct a list holding the data blocks (nodes)
 
-	lastParent = math.floor((len(blocks)-1)/2)
-	print([(x.label, x.data) for x in blocks])	
+	
+	# Calculate the last parent node depending on input size
+	lastParent = math.floor(len(blocks)/2) - 1
+
+	# Heapify 
 	for i in range(lastParent, -1, -1):
 		heapify(blocks, i, N)			
 	
+	last = len(blocks)
+
+
 	# Store children's positions in a dictionary for each node
 	for i, j in enumerate(blocks):											
-		if blocks.index(j) < lastParent:							# Until we reach the index of the parent of last node in the heap									
-			cLName = blocks[2*blocks.index(j)+1].label				# Assign to cLName current block's Left child label
-			cLPos = blocks[2*blocks.index(j)+1].pos					# Assign to cLPos current block's Left child position
-			cRName = blocks[2*blocks.index(j)+2].label				# Assign to cRName current block's Right child label
-			cRPos = blocks[2*blocks.index(j)+2].pos					# Assign to cRPos current block's Right child position
-			j.chPos = {cLName : cLPos, cRName : cRPos}				# Add to current block the children positions dictionary
+		if i <= lastParent:											# Until we reach the index of the parent of last node in the heap									
+			indexLeft = 2*i + 1										# Calculate the index of left child
+			indexRight = 2*i + 2									# Calculate the index of right child
+			cLName = blocks[indexLeft].label						# Assign to cLName current block's Left child label
+			cLPos = blocks[indexLeft].pos							# Assign to cLPos current block's Left child position
+			if indexRight < len(blocks):
+				cRName = blocks[indexRight].label					# Assign to cRName current block's Right child label
+				cRPos = blocks[indexRight].pos						# Assign to cRPos current block's Right child position
+				j.chPos = {cLName : cLPos, cRName : cRPos}			# Add to current block the children positions dictionary
+			else:
+				j.chPos = {cLName : cLPos}							# The current node has only a left child
 			if i == 0:												# Store the root of the ..
 				root = j											# .. data structure in variable 'root'
 
@@ -208,11 +222,12 @@ def read(nodeLabel):
 def insert(newNodeLabel, newNodeData):
 	global cache
 	global root
+	global top
 
 	newNode = odnode.Odnode(newNodeLabel, newNodeData, 0, {})		# Create Odnode instance for the new block (node)
 	
 	if cache != []:
-		# Traverse the structure until the last entry
+		'''# Traverse the structure until the last entry
 		eos = False
 		while eos == False:
 			lastInCache = cache[-1]
@@ -220,10 +235,12 @@ def insert(newNodeLabel, newNodeData):
 				eos = True
 			else:
 				read(list(lastInCache.chPos.keys())[0])
+				'''
+		read(top.label)
 	else:
 		root = newNode
 
-	cache.append(newNode)											# Insert new block in cache
+	cache.append(newNode)												# Insert new block in cache
 
 
 
@@ -252,34 +269,48 @@ def delete(nodeLabel):
 	else:
 		#isInCache = any(x.label == nodeLabel for x in cache)				# True if the block in question is already in cache
 		node = read(nodeLabel)
+		
 		if node.chPos == {}:
 			cache[-2].chPos = cache[-1].chPos								# Pass the chPos of last node to the previous one
 		else:
 			read(list(node.chPos.keys())[0])								# Bring root's next node into cache
+		
 		cache.remove(next((n for n in cache if n.label == nodeLabel)))
 		
 
 
 ################   Finalize   ################
 
-def finalize():
+def finalize(kindOfStructure):
 	global cache
 	global root
+	global top
 
 	if cache != []:
 		# Assign new random position to each node in cache
 		for n in cache:
 			pos = random.randint(0, 2**L - 1)
 			n.pos = pos
-																		
+																	
 		# Update children's positions in each node
-		for i, j in enumerate(cache):											
-			if cache.index(j) < len(cache)-1:									
-				cName = cache[cache.index(j)+1].label					# Assign to cName current block's child label
-				cPos = cache[cache.index(j)+1].pos						# Assign to cPos current block's child position
-				j.chPos = {cName : cPos}								# Add to current block the pair {Child_id : position}
-				if i == 0:												# Store the root of the ..
-					root = j											# .. data structure in variable 'root'
+		if kindOfStructure == 'linear':
+			for i, j in enumerate(cache):											
+				if i < len(cache)-1:									
+					cName = cache[i+1].label					# Assign to cName current block's child label
+					cPos = cache[i+1].pos						# Assign to cPos current block's child position
+					j.chPos = {cName : cPos}					# Add to current block the pair {Child_id : position}
+					if i == 0:									# Store the root of the ..
+						root = j								# .. data structure in variable 'root'
+			top = cache[len(cache)-1]							# Store last node of the list in 'top'
+		
+		if kindOfStructure == 'tree':
+			for i, j in enumerate(cache):											
+				if i < len(cache)-1:									# Until we reach the parent of last node in cache									
+					cName = cache[i+1].label							# Assign to cName current block's child label
+					cPos = cache[i+1].pos								# Assign to cPos current block's child position map
+					j.chPos[cName] = cPos
+					if i == 0:											# Store the root of the ..
+						root = j										# .. data structure in variable 'root'
 
 		# Write cahe back to ORAM
 		for k in cache:
@@ -351,7 +382,7 @@ while True:
 
 				def push(node, data):
 					insert(node, data)
-					finalize()
+					finalize('linear')
 				
 				push(newBlockName, newBlockData)
 
@@ -363,23 +394,24 @@ while True:
 				def pop():
 					global cache
 					global root
+					global top
 
+					oldTop = top
 					if root != None:
-						# Traverse the structure until the last entry
+						'''# Traverse the structure until the last entry
 						eos = False
 						while eos == False:
 							top = cache[-1]
 							if top.chPos == {}:
 								eos = True
 							else:
-								top = read(list(top.chPos.keys())[0])	
-						
-						delete(top.label)
-						finalize()
+								top = read(list(top.chPos.keys())[0])'''
+						delete(top.label)			
+						finalize('linear')
 					else:
-						top = None
+						oldTop = None
 					
-					return top
+					return oldTop
 				
 				topItem = pop()
 				if topItem != None:
@@ -389,6 +421,7 @@ while True:
 					print('\nThe Oblivious Stack is empty!')
 				
 				input('\nPlease press [ENTER] to continue...')
+
 			
 			if select == '3':
 				
@@ -437,7 +470,7 @@ while True:
 
 				def enqueue(node, data):
 					insert(node, data)
-					finalize()
+					finalize('linear')
 				
 				enqueue(newBlockName, newBlockData)
 
@@ -457,7 +490,7 @@ while True:
 						delete(root.label)
 						if cache != []:
 							root = cache[0]
-						finalize()
+						finalize('linear')
 					return tail
 				
 				tailItem = dequeue()
@@ -512,13 +545,92 @@ while True:
 			odsStart()
 			if select == '1':
 				newBlockName = input('\nEnter the ID of the element you want to insert : ')
-				newBlockData = input("Enter the key of element'{0}' : ".format(newBlockName))
+				newBlockData = input("Enter the key of element '{0}' : ".format(newBlockName))
 
-				def insertKey(id, key):
-					insert(id, key)
-					finalize()
+				def readPath():
+					global cache
+					global root
+					global last
+
+					depth = math.floor(math.log2(last))
+					currentNode = oramAccess('readandremove', root)
+
+					for k in range(depth-1, 0, -1):
+						# Check if the last parent has already 2 children. If yes, go to the next
+						if k == 1 and (last % 2 == 1):
+							ind = math.floor((last)/(math.pow(2,k)))
+						else:
+							ind = math.floor((last)/(math.pow(2,k))) - 1
+
+						if (ind % 2) == 1:
+							leftChildLabel = list(currentNode.chPos.keys())[0]
+							leftChildPos = currentNode.chPos[leftChildLabel]
+							ask = odnode.Odnode(leftChildLabel, 'null', leftChildPos, {})		# Ask for the left child .. 
+							fetch = oramAccess('readandremove', ask)							# .. to be fetched from ORAM		
+						else:
+							rightChildLabel = list(currentNode.chPos.keys())[1]
+							rightChildPos = currentNode.chPos[rightChildLabel]
+							ask = odnode.Odnode(rightChildLabel, 'null', rightChildPos, {})		# Ask for the right child .. 
+							fetch = oramAccess('readandremove', ask)							# .. to be fetched from ORAM
+						
+						cache.append(fetch)														# Append fetched node to cache
+						currentNode = fetch			
+
 				
-				insert(newBlockName, newBlockData)
+				def insertKey(id, key):
+					readPath()
+					newNode = odnode.Odnode(id, key, 0, {})											# Create Odnode instance for the new node
+					cache.append(newNode)															# Append new node in cache
+					cache[-2].chPos[cache[-1].label] = cache[-1].pos								# Attach new node to the heap
+
+					k = len(cache)-1
+					while (k > 0) and (int(cache[k].data) < int(cache[k-1].data)):
+						cache[k-1].label, cache[k].label = cache[k].label, cache[k-1].label			# Swap cache objects id's to restore order
+						cache[k-1].data, cache[k].data = cache[k].data, cache[k-1].data				# Swap cache objects keys to restore order
+						
+						childKeys = list(cache[k-1].chPos.keys())
+						
+						######################################################################## If swapped node was left child
+						if childKeys[0] == cache[k-1].label:
+							if len(childKeys) == 2:										
+								newPos = {cache[k-1].label : cache[k].label, childKeys[1] : childKeys[1]}
+								cache[k-1].chPos = dict((newPos[key], value) for (key, value) in cache[k-1].chPos.items())
+							else:
+								newPos = {cache[k-1].label : cache[k].label}
+								cache[k-1].chPos = dict((newPos[key], value) for (key, value) in cache[k-1].chPos.items())
+							# If swapped node hasn't reached the root
+							if k-2 >= 0:
+								childKeysParent = list(cache[k-2].chPos.keys())
+								# If swapped node was left child
+								if childKeysParent[0] == cache[k].label:
+									newPosParent = {cache[k].label : cache[k-1].label, childKeysParent[1] : childKeysParent[1]}
+									cache[k-2].chPos = dict((newPosParent[key], value) for (key, value) in cache[k-2].chPos.items())
+								# If swapped node was right child
+								if childKeysParent[1] == cache[k].label:
+									newPosParent = {childKeysParent[0] : childKeysParent[0], cache[k].label : cache[k-1].label}
+									cache[k-2].chPos = dict((newPosParent[key], value) for (key, value) in cache[k-2].chPos.items())
+
+						######################################################################## If swapped node was right child
+						if len(childKeys) > 1 and childKeys[1] == cache[k-1].label:										
+							newPos = {childKeys[0] : childKeys[0], cache[k-1].label : cache[k].label}
+							cache[k-1].chPos = dict((newPos[key], value) for (key, value) in cache[k-1].chPos.items())
+							# If swapped node hasn't reached the root
+							if k-2 >= 0:
+								childKeysParent = list(cache[k-2].chPos.keys())
+								# If swapped node was left child
+								if childKeysParent[0] == cache[k].label:
+									newPosParent = {cache[k].label : cache[k-1].label, childKeysParent[1] : childKeysParent[1]}
+									cache[k-2].chPos = dict((newPosParent[key], value) for (key, value) in cache[k-2].chPos.items())
+								# If swapped node was right child
+								if childKeysParent[1] == cache[k].label:
+									newPosParent = {childKeysParent[0] : childKeysParent[0], cache[k].label : cache[k-1].label}
+									cache[k-2].chPos = dict((newPosParent[key], value) for (key, value) in cache[k-2].chPos.items())
+						
+						k -= 1
+
+					finalize('tree')
+				
+				insertKey(newBlockName, newBlockData)
 
 				print('\nOperation finished successfully!')
 				input('\nPlease press [ENTER] to continue...')
@@ -566,16 +678,18 @@ while True:
 		cache.clear()
 		os.system('clear')
 		blockAlias = 'node'
+		'''
 		print('OBLIVIOUS AVL TREE')
 		print('------------------')
 		dataInput(N)
 		# present AVL menu
+		'''
 		break
 
 	elif oblStruct == '5':
 		while True:
 			os.system('clear')
-			print('Path ORAM explorer')
+			print('\n\nPath ORAM explorer')
 			print('------------------')
 			print('\n[1] --> Display the ORAM binary tree (Decrypted)')
 			print('\n[2] --> Display the ORAM binary tree (Encrypted)')
