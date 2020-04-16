@@ -58,7 +58,7 @@ def oramAccess(op, block_node):
 	block = next((a for a in S if a[0] == dnode['label']), ('None', 'Null', 0, {}))	# Read the block in question from the local stash
 
 	if op == 'add':																	# If the operation is 'add':
-		#print('(Add)')
+		print('(Add)')
 		if block in S:
 			S.remove(block)															# Remove the old block from the stash if it's there
 		S.append((dnode['label'], dnode['data'], dnode['pos'], dnode['chPos']))		# Add the new block, data and its children positions or the old block with new data
@@ -73,7 +73,7 @@ def oramAccess(op, block_node):
 		writeBucket(oram.Pl(oram.nod[L, x], l), S_temp)											# WriteBucket(P(x, l), S_temp)
 
 	if op == 'readandremove':
-		#print('(ReadAndRemove)')
+		print('(ReadAndRemove)')
 		askedBlock = odnode.Odnode(block[0], block[1], block[2], json.loads(str(block[3]).replace("'", '"')))
 		return askedBlock
 
@@ -179,9 +179,7 @@ def dataInputHeap(Ν):
 
 
 
-
 ##############################   ODS Framework Functions   ############################## 
-
 
 def odsStart():								# Update cache to contain the root
 	global cache
@@ -189,7 +187,6 @@ def odsStart():								# Update cache to contain the root
 	cache.clear()
 	if root != None:
 		cache.append(root)
-
 
 
 ###################  Read  ###################
@@ -213,7 +210,6 @@ def read(nodeLabel):
 	return cache[-1]															# Return the last object (node) in cache
 
 
-
 ####################  Insert  ####################
 
 def insert(newNodeLabel, newNodeData):
@@ -231,7 +227,6 @@ def insert(newNodeLabel, newNodeData):
 	cache.append(newNode)												# Insert new block in cache
 
 
-
 ################   Update(Write)   ################
 
 def write(nodeLabel, newData):
@@ -240,7 +235,6 @@ def write(nodeLabel, newData):
 	if isInCache == False:
 		read(nodeLabel)
 	next((n for n in cache if n.label == nodeLabel)).data = newData
-
 
 
 #################   Delete   #################
@@ -266,10 +260,10 @@ def delete(nodeLabel):
 		cache.remove(next((n for n in cache if n.label == nodeLabel)))
 		
 
-
 ################   Finalize   ################
 
 def finalize(typeIs):
+	print('finalize()')
 	global cache
 	global root
 	global top
@@ -322,13 +316,9 @@ def finalize(typeIs):
 
 
 
-
-
 ###############################  Main program loop  ###############################
 while True:
 
-	#S = []											# Initialize local stash as a list
-	#position = {}									# Initialize position map as a dictionary
 	blocks = []										# Initialize the list holding the data blocks (nodes)
 	cache = []										# Initialize local (client) cache
 
@@ -338,8 +328,9 @@ while True:
 	print('\n[1] --> Oblivious Stack')
 	print('\n[2] --> Oblivious Queue')
 	print('\n[3] --> Oblivious Heap')
-	print('\n[4] --> Oblivious AVL Tree')
-	print('\n[5] --> Path ORAM explorer')
+	print('\n--------------------------')
+	print('\n[4] --> Path ORAM explorer')
+	print('\n--------------------------')
 	print('\n[ENTER] --> EXIT\n\n\n')
 
 	oblStruct = input('Please enter your selection : ')
@@ -583,7 +574,7 @@ while True:
 					global root
 					global last
 					
-					newNode = odnode.Odnode(id, key, 0, {})											# Create Odnode instance for the new node
+					newNode = odnode.Odnode(id, key, 0, {})												# Create Odnode instance for the new node
 					
 					if last == 0:
 						root = newNode
@@ -610,13 +601,16 @@ while True:
 								else:
 									newPos = {cache[k-1].label : cache[k].label}
 									cache[k-1].chPos = dict((newPos[key], value) for (key, value) in cache[k-1].chPos.items())
+								
 								# If swapped node hasn't reached the root
 								if k-2 >= 0:
 									childKeysParent = list(cache[k-2].chPos.keys())
+									
 									# If swapped node was left child
 									if childKeysParent[0] == cache[k].label:
 										newPosParent = {cache[k].label : cache[k-1].label, childKeysParent[1] : childKeysParent[1]}
 										cache[k-2].chPos = dict((newPosParent[key], value) for (key, value) in cache[k-2].chPos.items())
+									
 									# If swapped node was right child
 									if childKeysParent[1] == cache[k].label:
 										newPosParent = {childKeysParent[0] : childKeysParent[0], cache[k].label : cache[k-1].label}
@@ -626,13 +620,16 @@ while True:
 							if len(childKeys) > 1 and childKeys[1] == cache[k-1].label:										
 								newPos = {childKeys[0] : childKeys[0], cache[k-1].label : cache[k].label}
 								cache[k-1].chPos = dict((newPos[key], value) for (key, value) in cache[k-1].chPos.items())
+								
 								# If swapped node hasn't reached the root
 								if k-2 >= 0:
 									childKeysParent = list(cache[k-2].chPos.keys())
+									
 									# If swapped node was left child
 									if childKeysParent[0] == cache[k].label:
 										newPosParent = {cache[k].label : cache[k-1].label, childKeysParent[1] : childKeysParent[1]}
 										cache[k-2].chPos = dict((newPosParent[key], value) for (key, value) in cache[k-2].chPos.items())
+									
 									# If swapped node was right child
 									if childKeysParent[1] == cache[k].label:
 										newPosParent = {childKeysParent[0] : childKeysParent[0], cache[k].label : cache[k-1].label}
@@ -662,6 +659,7 @@ while True:
 						# If last node in cache is not a leaf, fetch another one
 						if currentNode.chPos != {}:													
 							ind = last - 1
+							
 							if (ind % 2) == 1:
 								leftChildLabel = list(currentNode.chPos.keys())[0]
 								leftChildPos = currentNode.chPos[leftChildLabel]
@@ -683,36 +681,47 @@ while True:
 						if len(cache) > 0:
 							del cache[-1].chPos[cache[0].label]										# Remove previous last element from its parent's chPos dictionary
 
-						finalize('heap')
 						last -= 1
 
-					
+
 						#################################  Downheap  #################################
 
 						if last > 0:
-							odsStart()
-							oramAccess('readandremove', root)
 							currentNode = cache[0]
 							previousNode = None
 
 							k = 0
 							while k < last:
 								childKeys = list(currentNode.chPos.keys())
-								if len(childKeys) > 0:														# If current node has at least 1 child
+								
+								if len(childKeys) > 0:															# If current node has at least 1 child
 									leftChildLabel = list(currentNode.chPos.keys())[0]
 									leftChildPos = currentNode.chPos[leftChildLabel]
-									ask = odnode.Odnode(leftChildLabel, 'null', leftChildPos, {})			# Ask for the left child .. 
-									leftChild = oramAccess('readandremove', ask)							# .. to be fetched from ORAM
-									cache.append(leftChild)													# Add left child to cache
-									indexLeft = cache.index(cache[-1])
-									rightChild = None														# Initialize right child node												
-								if len(childKeys) > 1:														# If current node has 2 children
+									
+									isInCache = any(x.label == leftChildLabel for x in cache)					# True if the node in question is already in cache
+									if isInCache == False:
+										ask = odnode.Odnode(leftChildLabel, 'null', leftChildPos, {})			# Ask for the left child .. 
+										leftChild = oramAccess('readandremove', ask)							# .. to be fetched from ORAM
+										cache.append(leftChild)													# Add left child to cache
+									else:
+										leftChild = next(n for n in cache if n.label == leftChildLabel)
+									indexLeft = next((i for i, item in enumerate(cache) if item.label == leftChildLabel), -1)
+
+									rightChild = None															# Initialize right child node												
+								
+								if len(childKeys) > 1:															# If current node has 2 children
 									rightChildLabel = list(currentNode.chPos.keys())[1]
 									rightChildPos = currentNode.chPos[rightChildLabel]
-									ask = odnode.Odnode(rightChildLabel, 'null', rightChildPos, {})			# Ask for the right child .. 
-									rightChild = oramAccess('readandremove', ask)							# .. to be fetched from ORAM
-									cache.append(rightChild)												# Add right child to cache
-									indexRight = cache.index(cache[-1])
+
+									isInCache = any(x.label == rightChildLabel for x in cache)					# True if the node in question is already in cache
+									if isInCache == False:
+										ask = odnode.Odnode(rightChildLabel, 'null', rightChildPos, {})			# Ask for the right child .. 
+										rightChild = oramAccess('readandremove', ask)							# .. to be fetched from ORAM
+										cache.append(rightChild)												# Add right child to cache
+									else:
+										rightChild = next(n for n in cache if n.label == rightChildLabel)
+									indexRight = next((i for i, item in enumerate(cache) if item.label == rightChildLabel), -1)
+
 								if len(childKeys) == 0:
 									# The node has no children
 									break
@@ -722,6 +731,7 @@ while True:
 										if currentNode.data > leftChild.data:
 											currentNode.label, cache[indexLeft].label = cache[indexLeft].label, currentNode.label			# Swap cache objects id's to restore order
 											currentNode.data, cache[indexLeft].data = cache[indexLeft].data, currentNode.data				# Swap cache objects keys to restore order
+											
 											# Correction of the chPos dictionary (label:data) pairs in current node									
 											if len(childKeys) == 2:										
 												newPos = {currentNode.label : cache[indexLeft].label, childKeys[1] : childKeys[1]}
@@ -729,40 +739,50 @@ while True:
 											else:
 												newPos = {currentNode.label : cache[indexLeft].label}
 												currentNode.chPos = dict((newPos[key], value) for (key, value) in currentNode.chPos.items())
+											
 											# Correction of the chPos dictionary (label:data) pairs in previous node
 											if previousNode != None:
 												previousChildKeys = list(previousNode.chPos.keys())
+												
 												if cache[indexLeft].label == previousChildKeys[0]:						# If swapped node was a left child
 													newPos = {cache[indexLeft].label : currentNode.label, previousChildKeys[1] : previousChildKeys[1]}
 													previousNode.chPos = dict((newPos[key], value) for (key, value) in previousNode.chPos.items())
 												else:																	# If swapped node was a right child
 													newPos = {previousChildKeys[0] : previousChildKeys[0], cache[indexLeft].label : currentNode.label}
 													previousNode.chPos = dict((newPos[key], value) for (key, value) in previousNode.chPos.items())
+											
 											previousNode = currentNode													# Assign current node to previousNode
 											currentNode = cache[indexLeft]												# Let current node be the left child
 											k = 2*k + 1																	# Move node index to left child
+										
 										else:
 											# The root node reached the right position in the heap
 											break																
+									
 									else:
 										if currentNode.data > rightChild.data:
 											currentNode.label, cache[indexRight].label = cache[indexRight].label, currentNode.label			# Swap cache objects id's to restore order
 											currentNode.data, cache[indexRight].data = cache[indexRight].data, currentNode.data				# Swap cache objects keys to restore order
+											
 											# Correction of the chPos dictionary (label:data) pairs in current node									
 											newPos = {childKeys[0] : childKeys[0], currentNode.label : cache[indexRight].label}
 											currentNode.chPos = dict((newPos[key], value) for (key, value) in currentNode.chPos.items())
+											
 											# Correction of the chPos dictionary (label:data) pairs in previous node
 											if previousNode != None:
 												previousChildKeys = list(previousNode.chPos.keys())
+												
 												if cache[indexRight].label == previousChildKeys[0]:						# If swapped node was a left child
 													newPos = {cache[indexRight].label : currentNode.label, previousChildKeys[1] : previousChildKeys[1]}
 													previousNode.chPos = dict((newPos[key], value) for (key, value) in previousNode.chPos.items())
 												else:																	# If swapped node was a right child
 													newPos = {previousChildKeys[0] : previousChildKeys[0], cache[indexRight].label : currentNode.label}
 													previousNode.chPos = dict((newPos[key], value) for (key, value) in previousNode.chPos.items())
+											
 											previousNode = currentNode													# Assign current node to previousNode
 											currentNode = cache[indexRight]												# Let current node be the right child
 											k = 2*k + 2																	# Move node index to right child
+										
 										else:
 											# The root node reached the right position in the heap
 											break
@@ -770,6 +790,7 @@ while True:
 									if currentNode.data > leftChild.data:
 										currentNode.label, cache[indexLeft].label = cache[indexLeft].label, currentNode.label			# Swap cache objects id's to restore order
 										currentNode.data, cache[indexLeft].data = cache[indexLeft].data, currentNode.data				# Swap cache objects keys to restore order
+										
 										# Correction of the chPos dictionary (label:data) pairs in parent node									
 										if len(childKeys) == 2:										
 											newPos = {currentNode.label : cache[indexLeft].label, childKeys[1] : childKeys[1]}
@@ -785,7 +806,6 @@ while True:
 					
 					else:
 						return ()
-		
 				
 				heapMin = extractMin()
 
@@ -812,20 +832,9 @@ while True:
 				input('\nPlease press [ENTER] to continue...')
 
 
+
+
 	elif oblStruct == '4':
-		cache.clear()
-		os.system('clear')
-		blockAlias = 'node'
-		'''
-		print('OBLIVIOUS AVL TREE')
-		print('------------------')
-		dataInput(N)
-		# present AVL menu
-		'''
-		break
-
-
-	elif oblStruct == '5':
 		while True:
 			os.system('clear')
 			print('\n\nPath ORAM explorer')
