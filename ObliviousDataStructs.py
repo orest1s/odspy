@@ -328,14 +328,14 @@ while True:
 	print('\n[1] --> Oblivious Stack')
 	print('\n[2] --> Oblivious Queue')
 	print('\n[3] --> Oblivious Heap')
-	print('\n--------------------------')
+	print('\n---------------------------')
 	print('\n[4] --> Path ORAM explorer')
-	print('\n--------------------------')
+	print('\n---------------------------')
 	print('\n[ENTER] --> EXIT\n\n\n')
 
 	oblStruct = input('Please enter your selection : ')
 	
-	if (oblStruct != '5') and (oblStruct != ''):
+	if (oblStruct != '4') and (oblStruct != ''):
 		N = int(input('\nInitial number of items/nodes = '))		# Get the number of items the stack will contain
 		L = math.ceil(math.log(N, 2))								# Calculate path-oram's tree height L 
 		oram = bt.binTree(L, Z, passHash)							# Construct an instance of the binTree class with the given parametres
@@ -839,8 +839,8 @@ while True:
 			os.system('clear')
 			print('\n\nPath ORAM explorer')
 			print('------------------')
-			print('\n[1] --> Display the ORAM binary tree (Decrypted)')
-			print('\n[2] --> Display the ORAM binary tree (Encrypted)')
+			print("\n[1] --> Display path ORAM's content (Decrypted)")
+			print("\n[2] --> Display path ORAM's raw content (Encrypted)")
 			print('\n[ENTER] --> EXIT\n\n\n')
 
 			com = input('Please enter your choice : ')
