@@ -83,7 +83,7 @@ def oramAccess(op, block_node):
 
 def dataInput(Ν):
 	print('\n\nInitial data entry')
-	print('------------------')
+	print('------------------\n')
 	
 	global root
 	global top 
@@ -132,7 +132,7 @@ def heapify(nodelist, index, N):
 
 def dataInputHeap(Ν):
 	print('\n\nInitial data entry')
-	print('------------------')
+	print('------------------\n')
 	
 	global root
 	global last
@@ -146,7 +146,11 @@ def dataInputHeap(Ν):
 
 	
 	# Calculate the last parent node depending on input size
-	lastParent = math.floor(len(blocks)/2) - 1
+	if len(blocks) > 1:
+		lastParent = math.floor(len(blocks)/2) - 1
+	else:
+		lastParent = -1
+		root = blocks[0]
 
 	# Heapify 
 	for i in range(lastParent, -1, -1):
@@ -176,6 +180,43 @@ def dataInputHeap(Ν):
 		oramAccess('add', k)
 
 
+############################  Path ORAM Explorer  ############################
+def oramExplorer():
+	while True:
+		os.system('clear')
+		print('\n\nPath ORAM explorer')
+		print('------------------')
+		print("\n[1] --> Display path ORAM's content (Decrypted)")
+		print("\n[2] --> Display path ORAM's raw content (Encrypted)")
+		print('\n[ENTER] --> EXIT\n\n\n')
+
+		com = input('Please enter your choice : ')
+
+		if com == '':
+			return
+
+		###################  Display the ORAM (Decrypted)  ###################
+		elif com == '1':
+			print()
+			for k in sorted(oram.nod.keys()):
+				print('\nBucket id =', k)
+				blst = [(unpad(cr.D(oram.nod[k].value[i][0], passHash).decode('utf-8')),
+				unpad(cr.D(oram.nod[k].value[i][1], passHash).decode('utf-8')),
+				int(unpad(cr.D(oram.nod[k].value[i][2], passHash).decode('utf-8'))),
+				unpad(cr.D(oram.nod[k].value[i][3], passHash).decode('utf-8'))) for i in range(Z)]
+				print(blst)
+			input('\nPlease press [ENTER] to continue...')
+
+
+		###################  Display the ORAM (Encrypted)  ###################
+		elif com == '2':
+			print()
+			for k in sorted(oram.nod.keys()):
+				print('\nBucket id =', k)
+				blst = [(oram.nod[k].value[i][0].hex(), oram.nod[k].value[i][1].hex(),
+				(oram.nod[k].value[i][2].hex(), oram.nod[k].value[i][3].hex())) for i in range(Z)]
+				print(blst)
+			input('\nPlease press [ENTER] to continue...')
 
 
 
@@ -316,7 +357,7 @@ def finalize(typeIs):
 
 
 
-###############################  Main program loop  ###############################
+###########################################  Main program loop  ###########################################
 while True:
 
 	blocks = []										# Initialize the list holding the data blocks (nodes)
@@ -328,14 +369,12 @@ while True:
 	print('\n[1] --> Oblivious Stack')
 	print('\n[2] --> Oblivious Queue')
 	print('\n[3] --> Oblivious Heap')
-	print('\n---------------------------')
-	print('\n[4] --> Path ORAM explorer')
-	print('\n---------------------------')
-	print('\n[ENTER] --> EXIT\n\n\n')
+	print('-----------------------')
+	print('[ENTER] --> EXIT\n\n\n')
 
 	oblStruct = input('Please enter your selection : ')
 	
-	if (oblStruct != '4') and (oblStruct != ''):
+	if oblStruct != '':
 		N = int(input('\nInitial number of items/nodes = '))		# Get the number of items the stack will contain
 		L = math.ceil(math.log(N, 2))								# Calculate path-oram's tree height L 
 		oram = bt.binTree(L, Z, passHash)							# Construct an instance of the binTree class with the given parametres
@@ -357,6 +396,8 @@ while True:
 			print('\n[1] --> Push(item)')
 			print('\n[2] --> Pop()')
 			print('\n[3] --> IsEmpty()')
+			print('---------------------------')
+			print('[4] --> Path ORAM explorer')
 			print('\n[ENTER] --> EXIT\n\n\n')
 
 			select = input('Please enter your selection : ')
@@ -378,6 +419,7 @@ while True:
 				print('\nOperation finished successfully!')
 				input('\nPlease press [ENTER] to continue...')
 		
+			
 			if select == '2':
 
 				def pop():
@@ -416,7 +458,10 @@ while True:
 					print('\nFALSE - The Oblivious Stack is NOT empty.')
 				
 				input('\nPlease press [ENTER] to continue...')
+			
 
+			if select == '4':
+				oramExplorer()
 
 
 
@@ -437,6 +482,8 @@ while True:
 			print('\n[1] --> Enqueue(item)')
 			print('\n[2] --> Dequeue()')
 			print('\n[3] --> IsEmpty()')
+			print('---------------------------')
+			print('[4] --> Path ORAM explorer')
 			print('\n[ENTER] --> EXIT\n\n\n')
 
 			select = input('Please enter your selection : ')
@@ -458,6 +505,7 @@ while True:
 				print('\nOperation finished successfully!')
 				input('\nPlease press [ENTER] to continue...')
 		
+			
 			if select == '2':
 
 				def dequeue():
@@ -483,6 +531,7 @@ while True:
 				
 				input('\nPlease press [ENTER] to continue...')
 			
+			
 			if select == '3':
 				
 				def isEmpty():
@@ -496,6 +545,10 @@ while True:
 					print('\nFALSE - The Oblivious Queue is NOT empty.')
 				
 				input('\nPlease press [ENTER] to continue...')
+			
+			
+			if select == '4':
+				oramExplorer()
 
 
 
@@ -557,6 +610,8 @@ while True:
 			print('\n[1] --> Insert(element)')
 			print('\n[2] --> ExtractMin()')
 			print('\n[3] --> IsEmpty()')
+			print('---------------------------')
+			print('[4] --> Path ORAM explorer')
 			print('\n[ENTER] --> EXIT\n\n\n')
 
 			select = input('Please enter your selection : ')
@@ -645,6 +700,7 @@ while True:
 				print('\nOperation finished successfully!')
 				input('\nPlease press [ENTER] to continue...')
 		
+			
 			if select == '2':
 
 				def extractMin():
@@ -830,46 +886,11 @@ while True:
 					print('\nFALSE - The Oblivious Heap is NOT empty.')
 				
 				input('\nPlease press [ENTER] to continue...')
+			
 
+			if select == '4':
+				oramExplorer()
 
-
-
-	elif oblStruct == '4':
-		while True:
-			os.system('clear')
-			print('\n\nPath ORAM explorer')
-			print('------------------')
-			print("\n[1] --> Display path ORAM's content (Decrypted)")
-			print("\n[2] --> Display path ORAM's raw content (Encrypted)")
-			print('\n[ENTER] --> EXIT\n\n\n')
-
-			com = input('Please enter your choice : ')
-
-			if com == '':
-				break
-
-			###################  Display the ORAM (Decrypted)  ###################
-			elif com == '1':
-				print()
-				for k in sorted(oram.nod.keys()):
-					print('\nBucket id =', k)
-					blst = [(unpad(cr.D(oram.nod[k].value[i][0], passHash).decode('utf-8')),
-					unpad(cr.D(oram.nod[k].value[i][1], passHash).decode('utf-8')),
-					int(unpad(cr.D(oram.nod[k].value[i][2], passHash).decode('utf-8'))),
-					unpad(cr.D(oram.nod[k].value[i][3], passHash).decode('utf-8'))) for i in range(Z)]
-					print(blst)
-				input('\nPlease press [ENTER] to continue...')
-
-
-			###################  Display the ORAM (Encrypted)  ###################
-			elif com == '2':
-				print()
-				for k in sorted(oram.nod.keys()):
-					print('\nBucket id =', k)
-					blst = [(oram.nod[k].value[i][0].hex(), oram.nod[k].value[i][1].hex(),
-					(oram.nod[k].value[i][2].hex(), oram.nod[k].value[i][3].hex())) for i in range(Z)]
-					print(blst)
-				input('\nPlease press [ENTER] to continue...')
 
 
 	elif oblStruct == '':
