@@ -83,7 +83,7 @@ def oramAccess(op, block_node):
 
 def dataInput(Ν):
 	print('\n\nInitial data entry')
-	print('------------------\n')
+	print('\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e')
 	
 	global root
 	global top 
@@ -132,7 +132,7 @@ def heapify(nodelist, index, N):
 
 def dataInputHeap(Ν):
 	print('\n\nInitial data entry')
-	print('------------------\n')
+	print('\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e')
 	
 	global root
 	global last
@@ -185,10 +185,12 @@ def oramExplorer():
 	while True:
 		os.system('clear')
 		print('\n\nPath ORAM explorer')
-		print('------------------')
-		print("\n[1] --> Display path ORAM's content (Decrypted)")
+		print('\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e')
+		print("[1] --> Display path ORAM's content (Decrypted)")
 		print("\n[2] --> Display path ORAM's raw content (Encrypted)")
-		print('\n[ENTER] --> EXIT\n\n\n')
+		print('---------------------------------------------------')
+		print('[ENTER] --> EXIT')
+		print('___________________________________________________\n\n\n')
 
 		com = input('Please enter your choice : ')
 
@@ -329,6 +331,7 @@ def finalize(typeIs):
 
 		if typeIs == 'heap':
 			cacheNodeDict = dict((x.label, x.pos) for x in cache)
+
 			for i, j in enumerate(cache):											
 				if i < len(cache)-1:
 					childrenList = list(j.chPos.keys())
@@ -343,7 +346,6 @@ def finalize(typeIs):
 
 					if i == 0:											# Store the root of the ..
 						root = j										# .. data structure in variable 'root'
-
 
 		# Write cahe back to ORAM
 		for k in cache:
@@ -365,12 +367,13 @@ while True:
 
 	os.system('clear')											
 	print('\n\nODS (Oblivious Data Structure) CREATION')
-	print('---------------------------------------')
-	print('\n[1] --> Oblivious Stack')
+	print('\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e')
+	print('[1] --> Oblivious Stack')
 	print('\n[2] --> Oblivious Queue')
 	print('\n[3] --> Oblivious Heap')
-	print('-----------------------')
-	print('[ENTER] --> EXIT\n\n\n')
+	print('---------------------------------------')
+	print('[ENTER] --> EXIT')
+	print('_______________________________________\n\n\n')
 
 	oblStruct = input('Please enter your selection : ')
 	
@@ -384,7 +387,7 @@ while True:
 		os.system('clear')
 		blockAlias = 'item'
 		print('\n\nOBLIVIOUS STACK')
-		print('---------------')
+		print('\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e')
 		dataInput(N)
 		
 		while True:
@@ -392,13 +395,14 @@ while True:
 			os.system('clear')
 			
 			print('\n\nOblivious Stack Options')
-			print('-----------------------')
-			print('\n[1] --> Push(item)')
+			print('\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e')
+			print('[1] --> Push(item)')
 			print('\n[2] --> Pop()')
 			print('\n[3] --> IsEmpty()')
 			print('---------------------------')
 			print('[4] --> Path ORAM explorer')
-			print('\n[ENTER] --> EXIT\n\n\n')
+			print('\n[ENTER] --> EXIT')
+			print('___________________________\n\n\n')
 
 			select = input('Please enter your selection : ')
 
@@ -470,7 +474,7 @@ while True:
 		os.system('clear')
 		blockAlias = 'item'
 		print('\n\nOBLIVIOUS QUEUE')
-		print('---------------')
+		print('\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e')
 		dataInput(N)
 		
 		while True:
@@ -478,13 +482,14 @@ while True:
 			os.system('clear')
 			
 			print('\n\nOblivious Queue Options')
-			print('-----------------------')
-			print('\n[1] --> Enqueue(item)')
+			print('\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e')
+			print('[1] --> Enqueue(item)')
 			print('\n[2] --> Dequeue()')
 			print('\n[3] --> IsEmpty()')
 			print('---------------------------')
 			print('[4] --> Path ORAM explorer')
-			print('\n[ENTER] --> EXIT\n\n\n')
+			print('\n[ENTER] --> EXIT')
+			print('___________________________\n\n\n')
 
 			select = input('Please enter your selection : ')
 
@@ -557,7 +562,7 @@ while True:
 		os.system('clear')
 		blockAlias = 'element'
 		print('\n\nOBLIVIOUS HEAP (PRIORITY QUEUE)')
-		print('-------------------------------')
+		print('\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e')
 		dataInputHeap(N)
 
 		def readPath(operation):
@@ -606,13 +611,14 @@ while True:
 			os.system('clear')
 			
 			print('\n\nOblivious Heap Options')
-			print('----------------------')
-			print('\n[1] --> Insert(element)')
+			print('\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e')
+			print('[1] --> Insert(element)')
 			print('\n[2] --> ExtractMin()')
 			print('\n[3] --> IsEmpty()')
 			print('---------------------------')
 			print('[4] --> Path ORAM explorer')
-			print('\n[ENTER] --> EXIT\n\n\n')
+			print('\n[ENTER] --> EXIT')
+			print('___________________________\n\n\n')
 
 			select = input('Please enter your selection : ')
 
@@ -747,11 +753,11 @@ while True:
 							previousNode = None
 
 							k = 0
-							while k < last:
+							while k <= math.floor(last/2) - 1:
 								childKeys = list(currentNode.chPos.keys())
 								
 								if len(childKeys) > 0:															# If current node has at least 1 child
-									leftChildLabel = list(currentNode.chPos.keys())[0]
+									leftChildLabel = childKeys[0]
 									leftChildPos = currentNode.chPos[leftChildLabel]
 									
 									isInCache = any(x.label == leftChildLabel for x in cache)					# True if the node in question is already in cache
@@ -766,7 +772,7 @@ while True:
 									rightChild = None															# Initialize right child node												
 								
 								if len(childKeys) > 1:															# If current node has 2 children
-									rightChildLabel = list(currentNode.chPos.keys())[1]
+									rightChildLabel = childKeys[1]
 									rightChildPos = currentNode.chPos[rightChildLabel]
 
 									isInCache = any(x.label == rightChildLabel for x in cache)					# True if the node in question is already in cache
@@ -781,10 +787,11 @@ while True:
 								if len(childKeys) == 0:
 									# The node has no children
 									break
-								
+
+
 								if rightChild != None:
-									if leftChild.data < rightChild.data:
-										if currentNode.data > leftChild.data:
+									if int(leftChild.data) < int(rightChild.data):
+										if int(currentNode.data) > int(leftChild.data):
 											currentNode.label, cache[indexLeft].label = cache[indexLeft].label, currentNode.label			# Swap cache objects id's to restore order
 											currentNode.data, cache[indexLeft].data = cache[indexLeft].data, currentNode.data				# Swap cache objects keys to restore order
 											
@@ -815,8 +822,9 @@ while True:
 											# The root node reached the right position in the heap
 											break																
 									
+									
 									else:
-										if currentNode.data > rightChild.data:
+										if int(currentNode.data) > int(rightChild.data):
 											currentNode.label, cache[indexRight].label = cache[indexRight].label, currentNode.label			# Swap cache objects id's to restore order
 											currentNode.data, cache[indexRight].data = cache[indexRight].data, currentNode.data				# Swap cache objects keys to restore order
 											
@@ -838,12 +846,14 @@ while True:
 											previousNode = currentNode													# Assign current node to previousNode
 											currentNode = cache[indexRight]												# Let current node be the right child
 											k = 2*k + 2																	# Move node index to right child
-										
+											
 										else:
 											# The root node reached the right position in the heap
 											break
-								else:
-									if currentNode.data > leftChild.data:
+								
+								
+								else:	# rightChild = None
+									if int(currentNode.data) > int(leftChild.data):
 										currentNode.label, cache[indexLeft].label = cache[indexLeft].label, currentNode.label			# Swap cache objects id's to restore order
 										currentNode.data, cache[indexLeft].data = cache[indexLeft].data, currentNode.data				# Swap cache objects keys to restore order
 										
@@ -854,8 +864,24 @@ while True:
 										else:
 											newPos = {currentNode.label : cache[indexLeft].label}
 											currentNode.chPos = dict((newPos[key], value) for (key, value) in currentNode.chPos.items())
-									break
+									
+										# Correction of the chPos dictionary (label:data) pairs in previous node
+										if previousNode != None:
+											previousChildKeys = list(previousNode.chPos.keys())
+											
+											if cache[indexLeft].label == previousChildKeys[0]:							# If swapped node was a left child
+												newPos = {cache[indexLeft].label : currentNode.label, previousChildKeys[1] : previousChildKeys[1]}
+												previousNode.chPos = dict((newPos[key], value) for (key, value) in previousNode.chPos.items())
+											else:																		# If swapped node was a right child
+												newPos = {previousChildKeys[0] : previousChildKeys[0], cache[indexLeft].label : currentNode.label}
+												previousNode.chPos = dict((newPos[key], value) for (key, value) in previousNode.chPos.items())
+											
+											previousNode = currentNode													# Assign current node to previousNode
+											currentNode = cache[indexLeft]												# Let current node be the left child
+											k = 2*k + 1																	# Move node index to left child
 
+									break
+								
 							finalize('heap')
 						
 						return min
