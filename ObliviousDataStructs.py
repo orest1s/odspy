@@ -375,7 +375,7 @@ while True:
 	print('[ENTER] --> EXIT')
 	print('_______________________________________\n\n\n')
 
-	oblStruct = input('Please enter your selection : ')
+	oblStruct = input('Please enter your choice : ')
 	
 	if oblStruct != '':
 		N = int(input('\nInitial number of items/nodes = '))		# Get the number of items the stack will contain
@@ -404,7 +404,7 @@ while True:
 			print('\n[ENTER] --> EXIT')
 			print('___________________________\n\n\n')
 
-			select = input('Please enter your selection : ')
+			select = input('Please enter your choice : ')
 
 			if select == '':
 				break
@@ -491,7 +491,7 @@ while True:
 			print('\n[ENTER] --> EXIT')
 			print('___________________________\n\n\n')
 
-			select = input('Please enter your selection : ')
+			select = input('Please enter your choice : ')
 
 			if select == '':
 				break
@@ -620,7 +620,7 @@ while True:
 			print('\n[ENTER] --> EXIT')
 			print('___________________________\n\n\n')
 
-			select = input('Please enter your selection : ')
+			select = input('Please enter your choice : ')
 
 			if select == '':
 				break
