@@ -365,7 +365,7 @@ while True:
 	print('[ENTER] --> EXIT')
 	print('_______________________________________\n\n\n')
 
-	oblStruct = input('Please enter your selection : ')
+	oblStruct = input('Please enter your choice : ')
 	
 	if oblStruct != '':
 		N = int(input('\nInitial number of items/nodes (>1) : '))		# Get the number of items the stack will contain
@@ -394,7 +394,7 @@ while True:
 			print('\n[ENTER] --> EXIT')
 			print('___________________________\n\n\n')
 
-			select = input('Please enter your selection : ')
+			select = input('Please enter your choice : ')
 
 			if select == '':
 				break
@@ -403,6 +403,7 @@ while True:
 			if select == '1':
 				newBlockName = input('\nEnter the ID of the item you want to push : ')
 				newBlockData = input("Enter the data of item '{0}' : ".format(newBlockName))
+				print()
 
 				def push(node, data):
 					insert(node, data)
@@ -415,6 +416,7 @@ while True:
 		
 			
 			if select == '2':
+				print()
 
 				def pop():
 					global cache
@@ -489,7 +491,7 @@ while True:
 			print('\n[ENTER] --> EXIT')
 			print('___________________________\n\n\n')
 
-			select = input('Please enter your selection : ')
+			select = input('Please enter your choice : ')
 
 			if select == '':
 				break
@@ -498,6 +500,7 @@ while True:
 			if select == '1':
 				newBlockName = input('\nEnter the ID of the item you want to enqueue : ')
 				newBlockData = input("Enter the data of item '{0}' : ".format(newBlockName))
+				print()
 
 				def enqueue(node, data):
 					insert(node, data)
@@ -510,6 +513,7 @@ while True:
 		
 			
 			if select == '2':
+				print()
 
 				def dequeue():
 					global cache
@@ -623,7 +627,7 @@ while True:
 			print('\n[ENTER] --> EXIT')
 			print('___________________________\n\n\n')
 
-			select = input('Please enter your selection : ')
+			select = input('Please enter your choice : ')
 
 			if select == '':
 				break
@@ -631,7 +635,8 @@ while True:
 			odsStart()
 			if select == '1':
 				newBlockName = input('\nEnter the ID of the element you want to insert : ')
-				newBlockData = input("Enter the key of element '{0}' : ".format(newBlockName))	
+				newBlockData = input("Enter the key of element '{0}' : ".format(newBlockName))
+				print()	
 				
 				def insertKey(id, key):
 					global cache
@@ -711,6 +716,7 @@ while True:
 		
 			
 			if select == '2':
+				print()
 
 				def extractMin():
 					global cache
