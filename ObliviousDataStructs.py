@@ -103,7 +103,7 @@ def dataInput(Ν):
 			j.chPos = {cName : cPos}								# Add to current block the pair {Child_id : position}
 			if i == 0:												# Store the root of the ..
 				root = j											# .. data structure in variable 'root'
-	top = blocks[len(blocks)-1]										# Store last node of the list in 'top'
+	top = blocks[-1]												# Store last node of the list in 'top'
 
 	# Write given data blocks in ORAM	
 	for k in blocks:
@@ -261,13 +261,11 @@ def insert(newNodeLabel, newNodeData):
 	global top
 
 	newNode = odnode.Odnode(newNodeLabel, newNodeData, 0, {})		# Create Odnode instance for the new block (node)
-	
-	if cache != []:
-		read(top.label)
-	else:
-		root = newNode
-
-	cache.append(newNode)												# Insert new block in cache
+	if root != None: oramAccess('readandremove', root)				# Remove root from ORAM
+	cache.insert(0, newNode)										# Insert new block in cache at index 0
+	root = newNode													# newNode is the new root
+	if top == None:													# If the structure was empty, newNode is also the new top
+		top = newNode												
 
 
 ################   Update(Write)   ################
@@ -288,20 +286,12 @@ def delete(nodeLabel):
 
 	if len(cache) == 0:
 		print('\nThe Oblivious Data Structure is empty!\n')
-	elif len(cache) == 1 and cache[0].chPos == {}:
-		cache.clear()
-		root = None
+
 	else:
-		#isInCache = any(x.label == nodeLabel for x in cache)				# True if the block in question is already in cache
-		node = read(nodeLabel)
-		
-		if node.chPos == {}:
-			cache[-2].chPos = cache[-1].chPos								# Pass the chPos of last node to the previous one
-		else:
-			read(list(node.chPos.keys())[0])								# Bring root's next node into cache
-		
-		cache.remove(next((n for n in cache if n.label == nodeLabel)))
-		
+		if root != None: oramAccess('readandremove', root)					# Remove root from ORAM
+		read(nodeLabel)														# Get the node from ORAM
+		del cache[-1]														# Delete from cache
+
 
 ################   Finalize   ################
 
@@ -326,7 +316,7 @@ def finalize(typeIs):
 					j.chPos = {cName : cPos}					# Add to current block the pair {Child_id : position}
 					if i == 0:									# Store the root of the ..
 						root = j								# .. data structure in variable 'root'
-			top = cache[len(cache)-1]							# Store last node of the list in 'top'
+			
 	
 
 		if typeIs == 'heap':
@@ -378,7 +368,7 @@ while True:
 	oblStruct = input('Please enter your choice : ')
 	
 	if oblStruct != '':
-		N = int(input('\nInitial number of items/nodes = '))		# Get the number of items the stack will contain
+		N = int(input('\nInitial number of items/nodes (>1) : '))		# Get the number of items the stack will contain
 		L = math.ceil(math.log(N, 2))								# Calculate path-oram's tree height L 
 		oram = bt.binTree(L, Z, passHash)							# Construct an instance of the binTree class with the given parametres
 
@@ -413,6 +403,7 @@ while True:
 			if select == '1':
 				newBlockName = input('\nEnter the ID of the item you want to push : ')
 				newBlockData = input("Enter the data of item '{0}' : ".format(newBlockName))
+				print()
 
 				def push(node, data):
 					insert(node, data)
@@ -425,15 +416,22 @@ while True:
 		
 			
 			if select == '2':
+				print()
 
 				def pop():
 					global cache
 					global root
-					global top
-
-					oldTop = top
+					
 					if root != None:
-						delete(top.label)			
+						oldTop = oramAccess('readandremove', root)
+						
+						if oldTop.chPos == {}:									# If this is the last item
+							newRoot = None
+						else:
+							rootChildKey = list(oldTop.chPos.keys())[0]			# Get the root's child label
+							newRoot = read(rootChildKey)						# Read root's next item
+							del cache[0]										# Delete old root (top)
+						root = newRoot		
 						finalize('linear')
 					else:
 						oldTop = None
@@ -441,9 +439,11 @@ while True:
 					return oldTop
 				
 				topItem = pop()
+				
 				if topItem != None:
 					print('\nItem ID :', topItem.label)
 					print('Item Data :', topItem.data)
+				
 				else:
 					print('\nThe Oblivious Stack is empty!')
 				
@@ -500,6 +500,7 @@ while True:
 			if select == '1':
 				newBlockName = input('\nEnter the ID of the item you want to enqueue : ')
 				newBlockData = input("Enter the data of item '{0}' : ".format(newBlockName))
+				print()
 
 				def enqueue(node, data):
 					insert(node, data)
@@ -512,19 +513,25 @@ while True:
 		
 			
 			if select == '2':
+				print()
 
 				def dequeue():
 					global cache
 					global root
+					global top
 					
 					tail = ()
 
-					if root != None:
-						tail = (root.label, root.data)
-						delete(root.label)
+					if top != None:
+						tail = (top.label, top.data)
+						delete(top.label)
 						if cache != []:
-							root = cache[0]
-						finalize('linear')
+							top = cache[-1]
+							finalize('linear')
+						else:
+							top = None
+							root = None
+			
 					return tail
 				
 				tailItem = dequeue()
@@ -628,7 +635,8 @@ while True:
 			odsStart()
 			if select == '1':
 				newBlockName = input('\nEnter the ID of the element you want to insert : ')
-				newBlockData = input("Enter the key of element '{0}' : ".format(newBlockName))	
+				newBlockData = input("Enter the key of element '{0}' : ".format(newBlockName))
+				print()	
 				
 				def insertKey(id, key):
 					global cache
@@ -708,6 +716,7 @@ while True:
 		
 			
 			if select == '2':
+				print()
 
 				def extractMin():
 					global cache
