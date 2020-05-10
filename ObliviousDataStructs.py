@@ -503,9 +503,11 @@ while True:
 				print()
 
 				def enqueue(node, data):
+
 					insert(node, data)
 					finalize('linear')
-				
+
+			
 				enqueue(newBlockName, newBlockData)
 
 				print('\nOperation finished successfully!')
@@ -519,9 +521,9 @@ while True:
 					global cache
 					global root
 					global top
-					
-					tail = ()
 
+					tail = ()
+					
 					if top != None:
 						tail = (top.label, top.data)
 						delete(top.label)
@@ -531,7 +533,7 @@ while True:
 						else:
 							top = None
 							root = None
-			
+					
 					return tail
 				
 				tailItem = dequeue()
