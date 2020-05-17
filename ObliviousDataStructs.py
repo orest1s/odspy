@@ -343,7 +343,7 @@ def finalize(typeIs):
 	global root
 	global top
 
-	if cache != []:
+	if cache != [] and typeIs != 'enqueue':
 		# Assign new random position to each node in cache
 		for n in cache:
 			pos = random.randint(0, 2**L - 1)
@@ -358,8 +358,8 @@ def finalize(typeIs):
 					j.chPos = {cName : cPos}					# Add to current block the pair {Child_id : position}
 					if i == 0:									# Store the root of the ..
 						root = j								# .. data structure in variable 'root'
-			
-	
+
+
 
 		if typeIs == 'heap':
 			cacheNodeDict = dict((x.label, x.pos) for x in cache)
@@ -386,7 +386,13 @@ def finalize(typeIs):
 		# Empty client cache
 		cache.clear()
 
-
+	if typeIs == 'enqueue':
+		# Write cahe back to ORAM
+		for k in cache:
+			oramAccess('add', k)
+		
+		# Empty client cache
+		cache.clear()
 
 
 
@@ -540,29 +546,32 @@ while True:
 
 			odsStart()
 			if select == '1':
-			
-				def enqueue():
+				global nextID
+				global nextPOS
+				global queueSize
+				
+				newID = nextID
+				newPOS = nextPOS
+				
+				queueSize += 1
+				nextID = str(int(newID) + 1)
+				nextPOS = random.randint(0, 2**L - 1)				# Generate an extra random position for next enqueue()
+				
+				newBlockData = input("\nEnter the data of item '{0}' : ".format(newID))
+				print()
+				newNode = odnode.Odnode(newID, newBlockData, newPOS, {nextID : nextPOS})
+				
+				def enqueue(qnode):
 					global root
-					global nextID
-					global nextPOS
 					global queueSize
 					
-					newID = nextID
-					newPOS = nextPOS
-					
-					queueSize += 1
-					nextID = str(int(newID) + 1)
-					nextPOS = random.randint(0, 2**L - 1)				# Generate an extra random position for next enqueue()
-					
-					newBlockData = input("\nEnter the data of item '{0}' : ".format(newID))
-					print()
-
-					newNode = odnode.Odnode(newID, newBlockData, newPOS, {nextID : nextPOS})
-					oramAccess('add', newNode)
+					cache.clear()
+					cache.append(qnode)
+					finalize('enqueue')
 					if queueSize == 1:
 						root = newNode
 
-				enqueue()
+				enqueue(newNode)
 
 				print('\nOperation finished successfully!')
 				input('\nPlease press [ENTER] to continue...')
