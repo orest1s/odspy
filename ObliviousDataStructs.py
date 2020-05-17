@@ -81,20 +81,22 @@ def oramAccess(op, block_node):
 
 ###########################  Initial data entry functions  ###########################
 
-def dataInput(Ν):
+def dataInputStack(Ν):
 	print('\n\nInitial data entry')
 	print('\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e')
 	
 	global root
-	global top 
+	global top
+
 	for i in range(N):
 		blockLabel = input('Label of {} No. {}: '.format(blockAlias, i))
 		blockData = input('Data of {} No. {}: '.format(blockAlias, i))
 		print()
-		pos = random.randint(0, 2**L - 1)
+		pos = random.randint(0, 2**L - 1)							# Generate random positions for the nodes
 		blkNode = odnode.Odnode(blockLabel, blockData, pos, {})		# Create instance of Odnode class and assign the values of the current block (node)
 		blocks.append(blkNode)										# Construct a list holding the data blocks (nodes) 								
 
+	
 	# Store children's positions in a dictionary for each node
 	for i, j in enumerate(blocks):											
 		if i < len(blocks)-1:									
@@ -104,10 +106,50 @@ def dataInput(Ν):
 			if i == 0:												# Store the root of the ..
 				root = j											# .. data structure in variable 'root'
 	top = blocks[-1]												# Store last node of the list in 'top'
+	
+	# Write given data blocks in ORAM	
+	for k in blocks:
+		oramAccess('add', k)
+
+
+###################################################################
+
+def dataInputQueue(Ν):
+	print('\n\nInitial data entry')
+	print('\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e')
+	
+	global root
+	global top
+	global nextID
+	global nextPOS
+	global queueSize
+
+	queueSize = N
+
+	for i in range(N):
+		blockData = input('Data of {} No. {}: '.format(blockAlias, i))
+		print()
+		pos = random.randint(0, 2**L - 1)							# Generate random positions for the nodes
+		blkNode = odnode.Odnode(str(i), blockData, pos, {})		# Create instance of Odnode class and assign the values of the current block (node)
+		blocks.append(blkNode)										# Construct a list holding the data blocks (nodes) 								
+	nextID = str(N)
+	nextPOS = random.randint(0, 2**L - 1)							# Generate an extra random position to be used in enqueue()
+	
+	# Store children's positions in a dictionary for each node
+	for i, j in enumerate(blocks):											
+		if i < len(blocks)-1:									
+			cName = blocks[i+1].label								# Assign to cName current block's child label
+			cPos = blocks[i+1].pos									# Assign to cPos current block's child position
+			j.chPos = {cName : cPos}								# Add to current block the pair {Child_id : position}
+			if i == 0:												# Store the root of the ..
+				root = j											# .. data structure in variable 'root'
+	top = blocks[-1]												# Store last node of the list in 'top'
+	top.chPos = {nextID : nextPOS}
 
 	# Write given data blocks in ORAM	
 	for k in blocks:
 		oramAccess('add', k)
+
 
 ###################################################################
 
@@ -367,7 +409,7 @@ while True:
 
 	oblStruct = input('Please enter your choice : ')
 	
-	if oblStruct != '':
+	if oblStruct == '1' or oblStruct == '2' or oblStruct == '3':
 		N = int(input('\nInitial number of items/nodes (>1) : '))		# Get the number of items the stack will contain
 		L = math.ceil(math.log(N, 2))								# Calculate path-oram's tree height L 
 		oram = bt.binTree(L, Z, passHash)							# Construct an instance of the binTree class with the given parametres
@@ -378,7 +420,7 @@ while True:
 		blockAlias = 'item'
 		print('\n\nOBLIVIOUS STACK')
 		print('\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e')
-		dataInput(N)
+		dataInputStack(N)
 		
 		while True:
 			# present stack menu
@@ -452,10 +494,10 @@ while True:
 			
 			if select == '3':
 				
-				def isEmpty():
+				def isStackEmpty():
 					return (len(cache) == 0)
 
-				ans = isEmpty()
+				ans = isStackEmpty()
 				if ans:
 					print('\nTRUE - The Oblivious Stack is empty.')
 				else:
@@ -469,13 +511,13 @@ while True:
 
 
 
-	elif oblStruct == '2':
+	if oblStruct == '2':
 		cache.clear()
 		os.system('clear')
 		blockAlias = 'item'
 		print('\n\nOBLIVIOUS QUEUE')
 		print('\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e\u203e')
-		dataInput(N)
+		dataInputQueue(N)
 		
 		while True:
 			# present queue menu
@@ -498,17 +540,29 @@ while True:
 
 			odsStart()
 			if select == '1':
-				newBlockName = input('\nEnter the ID of the item you want to enqueue : ')
-				newBlockData = input("Enter the data of item '{0}' : ".format(newBlockName))
-				print()
-
-				def enqueue(node, data):
-
-					insert(node, data)
-					finalize('linear')
-
 			
-				enqueue(newBlockName, newBlockData)
+				def enqueue():
+					global root
+					global nextID
+					global nextPOS
+					global queueSize
+					
+					newID = nextID
+					newPOS = nextPOS
+					
+					queueSize += 1
+					nextID = str(int(newID) + 1)
+					nextPOS = random.randint(0, 2**L - 1)				# Generate an extra random position for next enqueue()
+					
+					newBlockData = input("\nEnter the data of item '{0}' : ".format(newID))
+					print()
+
+					newNode = odnode.Odnode(newID, newBlockData, newPOS, {nextID : nextPOS})
+					oramAccess('add', newNode)
+					if queueSize == 1:
+						root = newNode
+
+				enqueue()
 
 				print('\nOperation finished successfully!')
 				input('\nPlease press [ENTER] to continue...')
@@ -520,38 +574,43 @@ while True:
 				def dequeue():
 					global cache
 					global root
-					global top
+					global queueSize
 
-					tail = ()
-					
-					if top != None:
-						tail = (top.label, top.data)
-						delete(top.label)
-						if cache != []:
-							top = cache[-1]
-							finalize('linear')
+					if root != None:
+						oldHead = oramAccess('readandremove', root)
+						queueSize -= 1
+						rootChildKey = list(oldHead.chPos.keys())[0]
+
+						if queueSize == 0:							# If this is the last item
+							newRoot = None
 						else:
-							top = None
-							root = None
+							newRoot = read(rootChildKey)			# Read root's next item
+							del cache[0]							# Delete old root (top)
+						root = newRoot		
+						finalize('linear')
+					else:
+						oldHead = None
 					
-					return tail
-				
-				tailItem = dequeue()
-				if tailItem != ():
-					print('\nItem ID :', tailItem[0])
-					print('Item Data :', tailItem[1])
+					return oldHead
+
+				headItem = dequeue()
+
+				if headItem != None:
+					print('\nItem ID :', headItem.label	)
+					print('Item Data :', headItem.data)
+
 				else:
 					print('\nThe Oblivious Queue is empty!')
-				
+			
 				input('\nPlease press [ENTER] to continue...')
 			
 			
 			if select == '3':
 				
-				def isEmpty():
+				def isQueueEmpty():
 					return (len(cache) == 0)
 
-				ans = isEmpty()
+				ans = isQueueEmpty()
 				
 				if ans:
 					print('\nTRUE - The Oblivious Queue is empty.')
@@ -566,7 +625,7 @@ while True:
 
 
 
-	elif oblStruct == '3':
+	if oblStruct == '3':
 		cache.clear()
 		os.system('clear')
 		blockAlias = 'element'
@@ -930,5 +989,5 @@ while True:
 
 
 
-	elif oblStruct == '':
+	if oblStruct == '':
 		break
