@@ -379,20 +379,12 @@ def finalize(typeIs):
 					if i == 0:											# Store the root of the ..
 						root = j										# .. data structure in variable 'root'
 
-		# Write cahe back to ORAM
-		for k in cache:
-			oramAccess('add', k)
-		
-		# Empty client cache
-		cache.clear()
-
-	if typeIs == 'enqueue':
-		# Write cahe back to ORAM
-		for k in cache:
-			oramAccess('add', k)
-		
-		# Empty client cache
-		cache.clear()
+	# Write cahe back to ORAM
+	for k in cache:
+		oramAccess('add', k)
+	
+	# Empty client cache
+	cache.clear()
 
 
 
